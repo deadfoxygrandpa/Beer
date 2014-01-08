@@ -1,1 +1,547 @@
-Hello World
+<!DOCTYPE HTML>
+<html><head><meta charset="UTF-8"><title>Main</title><script type="text/javascript" src="elm-runtime.js"></script><script type="text/javascript">Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm)
+                {
+                  _elm.Main = _elm.Main || {};
+                  if (_elm.Main.values)
+                  return _elm.Main.values;
+                  var _N = Elm.Native,
+                      _U = _N.Utils.make(_elm),
+                      _L = _N.List.make(_elm),
+                      _E = _N.Error.make(_elm),
+                      _J = _N.JavaScript.make(_elm),
+                      $moduleName = "Main";
+                  var Basics = Elm.Basics.make(_elm);
+                  var Color = Elm.Color.make(_elm);
+                  var Constants = Elm.Constants.make(_elm);
+                  var Graphics = Graphics || {};
+                  Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                  var Graphics = Graphics || {};
+                  Graphics.Element = Elm.Graphics.Element.make(_elm);
+                  var Interface = Elm.Interface.make(_elm);
+                  var List = Elm.List.make(_elm);
+                  var Maybe = Elm.Maybe.make(_elm);
+                  var Model = Elm.Model.make(_elm);
+                  var Native = Native || {};
+                  Native.Ports = Elm.Native.Ports.make(_elm);
+                  var Prelude = Elm.Prelude.make(_elm);
+                  var Signal = Elm.Signal.make(_elm);
+                  var String = Elm.String.make(_elm);
+                  var Text = Elm.Text.make(_elm);
+                  var Time = Elm.Time.make(_elm);
+                  var Update = Elm.Update.make(_elm);
+                  var Window = Elm.Window.make(_elm);
+                  var _op = {};
+                  var badBeer = A5(Model.Beer,
+                                   "Budweiser",
+                                   "Anheuser-Busch InBev",
+                                   "Pale Lager",
+                                   5,
+                                   A2(Model.Score,0,3));
+                  var initialPerson = A8(Model.Person,
+                                         Model.Male,
+                                         0,
+                                         10,
+                                         0,
+                                         0,
+                                         false,
+                                         false,
+                                         {ctor: "_Tuple2", _0: 1, _1: badBeer});
+                  var initialState = A5(Model.State,initialPerson,0,0,0,0);
+                  var stateSignal = A3(Signal.foldp,
+                                       Update.updateState,
+                                       initialState,
+                                       A2(Signal.sampleOn,
+                                          Time.fps(Constants.framerate),
+                                          A2(Signal._op["~"],
+                                             A2(Signal._op["~"],
+                                                A2(Signal._op["<~"],
+                                                   F3(function (x,y,z)
+                                                      {
+                                                        return A3(Model.Timing,x,y,z);
+                                                      }),
+                                                   Signal.count(Interface.chugClicks)),
+                                                Signal.count(Interface.urinateClicks)),
+                                             Interface.timeFactor)));
+                  var main = A2(Signal._op["~"],
+                                A2(Signal._op["~"],
+                                   A2(Signal._op["~"],
+                                      A2(Signal._op["~"],
+                                         A2(Signal._op["<~"],
+                                            Interface.render,
+                                            Signal.count(Time.fps(52))),
+                                         Signal.count(Time.fps(43))),
+                                      stateSignal),
+                                   Interface.picker),
+                                Window.dimensions);
+                  _elm.Main.values = {_op: _op, badBeer: badBeer, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
+                  return _elm.Main.values;
+                };Elm.Update = Elm.Update || {};
+Elm.Update.make = function (_elm)
+                  {
+                    _elm.Update = _elm.Update || {};
+                    if (_elm.Update.values)
+                    return _elm.Update.values;
+                    var _N = Elm.Native,
+                        _U = _N.Utils.make(_elm),
+                        _L = _N.List.make(_elm),
+                        _E = _N.Error.make(_elm),
+                        _J = _N.JavaScript.make(_elm),
+                        $moduleName = "Update";
+                    var Basics = Elm.Basics.make(_elm);
+                    var Color = Elm.Color.make(_elm);
+                    var Constants = Elm.Constants.make(_elm);
+                    var Graphics = Graphics || {};
+                    Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                    var Graphics = Graphics || {};
+                    Graphics.Element = Elm.Graphics.Element.make(_elm);
+                    var List = Elm.List.make(_elm);
+                    var Maybe = Elm.Maybe.make(_elm);
+                    var Model = Elm.Model.make(_elm);
+                    var Native = Native || {};
+                    Native.Ports = Elm.Native.Ports.make(_elm);
+                    var Prelude = Elm.Prelude.make(_elm);
+                    var Signal = Elm.Signal.make(_elm);
+                    var String = Elm.String.make(_elm);
+                    var Text = Elm.Text.make(_elm);
+                    var Time = Elm.Time.make(_elm);
+                    var _op = {};
+                    var drank = F2(function (person,bac)
+                                   {
+                                     return function ()
+                                            {
+                                              var bw = function ()
+                                                       {
+                                                         var _v0 = person.sex;
+                                                         switch (_v0.ctor)
+                                                         {case
+                                                          "Female" :
+                                                            return 0.49;
+                                                          case
+                                                          "Male" :
+                                                            return 0.58;}
+                                                         _E.Case($moduleName,
+                                                                 "between lines 17 and 20");
+                                                       }();
+                                              return 10 * bac * bw * person.weight / (1.2 * 0.806);
+                                            }();
+                                   });
+                    var drink = F2(function (grams,person)
+                                   {
+                                     return function ()
+                                            {
+                                              var bw = function ()
+                                                       {
+                                                         var _v1 = person.sex;
+                                                         switch (_v1.ctor)
+                                                         {case
+                                                          "Female" :
+                                                            return 0.49;
+                                                          case
+                                                          "Male" :
+                                                            return 0.58;}
+                                                         _E.Case($moduleName,
+                                                                 "between lines 10 and 13");
+                                                       }();
+                                              var sd = grams / 10;
+                                              return A2(Basics.clamp,
+                                                        0,
+                                                        100)(0.806 * sd * 1.2 / (bw * person.weight));
+                                            }();
+                                   });
+                    var process = F2(function (person,timeStep)
+                                     {
+                                       return function ()
+                                              {
+                                                var $ = _U.cmp(person.urine,
+                                                               10) < 0 ? {ctor: "_Tuple2", _0: false, _1: false} : _U.cmp(person.urine,
+                                                                                                                          500) > 0 ? {ctor: "_Tuple2", _0: true, _1: true} : {ctor: "_Tuple2", _0: person.urinating, _1: person.wetSelf},
+                                                    urinating = $._0,
+                                                    wetSelf = $._1;
+                                                var urinated = person.urinating ? Constants.urinationRate * timeStep : 0;
+                                                var a = Constants.absorptionRate * timeStep;
+                                                var absorbed = _U.cmp(a,
+                                                                      person.alc) > 0 ? person.alc : a;
+                                                var newbac = A2(drink,absorbed * 1.19,person);
+                                                var mr = function ()
+                                                         {
+                                                           var _v2 = person.sex;
+                                                           switch (_v2.ctor)
+                                                           {case
+                                                            "Female" :
+                                                              return 1.7e-2;
+                                                            case
+                                                            "Male" :
+                                                              return 1.5e-2;}
+                                                           _E.Case($moduleName,
+                                                                   "between lines 40 and 43");
+                                                         }();
+                                                var m = mr * timeStep;
+                                                var metabolized = _U.cmp(m,
+                                                                         person.bac) > 0 ? person.bac : m;
+                                                var urine = 10 * A2(drank,person,metabolized);
+                                                return _U.replace([["bac",
+                                                                    A2(Basics.clamp,
+                                                                       0,
+                                                                       100)(person.bac + newbac - metabolized)],
+                                                                   ["alc",person.alc - absorbed],
+                                                                   ["urine",
+                                                                    A2(Basics.clamp,
+                                                                       0,
+                                                                       700)(person.urine + urine - urinated)],
+                                                                   ["urinating",urinating],
+                                                                   ["wetSelf",wetSelf]],
+                                                                  person);
+                                              }();
+                                     });
+                    var updateState = F2(function (_v3,_v4)
+                                         {
+                                           return function ()
+                                                  {
+                                                    return function ()
+                                                           {
+                                                             return function ()
+                                                                    {
+                                                                      var newElapsed = _v4.elapsed + _v3.timeStep;
+                                                                      return _U.cmp(_v3.beerClicks,
+                                                                                    _v4.oldBeerClicks) > 0 ? _U.replace([["person",
+                                                                                                                          _U.replace([["alc",
+                                                                                                                                       _v4.person.alc + 10]],
+                                                                                                                                     _v4.person)],
+                                                                                                                         ["drinks",
+                                                                                                                          _v4.drinks + 1],
+                                                                                                                         ["oldBeerClicks",
+                                                                                                                          _v3.beerClicks]],
+                                                                                                                        _v4) : _U.cmp(_v3.urineClicks,
+                                                                                                                                      _v4.oldUrineClicks) > 0 && _U.cmp(_v4.person.urine,
+                                                                                                                                                                        10) > 0 ? _U.replace([["person",
+                                                                                                                                                                                               _U.replace([["urinating",
+                                                                                                                                                                                                            true]],
+                                                                                                                                                                                                          _v4.person)]],
+                                                                                                                                                                                             _v4) : _U.replace([["person",
+                                                                                                                                                                                                                 A2(process,
+                                                                                                                                                                                                                    _v4.person,
+                                                                                                                                                                                                                    _v3.timeStep)],
+                                                                                                                                                                                                                ["elapsed",
+                                                                                                                                                                                                                 newElapsed],
+                                                                                                                                                                                                                ["oldUrineClicks",
+                                                                                                                                                                                                                 _v3.urineClicks]],
+                                                                                                                                                                                                               _v4);
+                                                                    }();
+                                                           }();
+                                                  }();
+                                         });
+                    _elm.Update.values = {_op: _op, drink: drink, drank: drank, updateState: updateState, process: process};
+                    return _elm.Update.values;
+                  };Elm.Interface = Elm.Interface || {};
+Elm.Interface.make = function (_elm)
+                     {
+                       _elm.Interface = _elm.Interface || {};
+                       if (_elm.Interface.values)
+                       return _elm.Interface.values;
+                       var _N = Elm.Native,
+                           _U = _N.Utils.make(_elm),
+                           _L = _N.List.make(_elm),
+                           _E = _N.Error.make(_elm),
+                           _J = _N.JavaScript.make(_elm),
+                           $moduleName = "Interface";
+                       var Basics = Elm.Basics.make(_elm);
+                       var Color = Elm.Color.make(_elm);
+                       var Constants = Elm.Constants.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Element = Elm.Graphics.Element.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Input = Elm.Graphics.Input.make(_elm);
+                       var List = Elm.List.make(_elm);
+                       var Maybe = Elm.Maybe.make(_elm);
+                       var Model = Elm.Model.make(_elm);
+                       var Native = Native || {};
+                       Native.Ports = Elm.Native.Ports.make(_elm);
+                       var Prelude = Elm.Prelude.make(_elm);
+                       var Signal = Elm.Signal.make(_elm);
+                       var SpecialEffects = Elm.SpecialEffects.make(_elm);
+                       var String = Elm.String.make(_elm);
+                       var Text = Elm.Text.make(_elm);
+                       var Time = Elm.Time.make(_elm);
+                       var Window = Elm.Window.make(_elm);
+                       var _op = {};
+                       var peeDisplay = F2(function (urine,wetSelf)
+                                           {
+                                             return wetSelf ? "you peed your pants, moron. i told you to go to the bathroom" : _U.cmp(urine,
+                                                                                                                                      100) < 0 ? "you don\'t have to pee" : _U.cmp(urine,
+                                                                                                                                                                                   150) < 0 ? "you kinda have to pee" : _U.cmp(urine,
+                                                                                                                                                                                                                               250) < 0 ? "you gotta go!" : _U.cmp(urine,
+                                                                                                                                                                                                                                                                   500) < 0 ? "you seriously gotta pee real bad" : "you peed your pants, moron. i told you to go to the bathroom";
+                                           });
+                       var timeDisplay = function (t)
+                                         {
+                                           return function ()
+                                                  {
+                                                    var t$ = t * 3600000;
+                                                    var hours = Basics.floor(Time.inHours(t$));
+                                                    var minutes = A2(Basics.mod,
+                                                                     Basics.floor(Time.inMinutes(t$)),
+                                                                     60);
+                                                    var seconds = A2(Basics.mod,
+                                                                     Basics.floor(Time.inSeconds(t$)),
+                                                                     60);
+                                                    return _L.append(A3(String.padLeft,
+                                                                        2,
+                                                                        _U.chr("0"),
+                                                                        Prelude.show(hours)),
+                                                                     _L.append(":",
+                                                                               _L.append(A3(String.padLeft,
+                                                                                            2,
+                                                                                            _U.chr("0"),
+                                                                                            Prelude.show(minutes)),
+                                                                                         _L.append(":",
+                                                                                                   A3(String.padLeft,
+                                                                                                      2,
+                                                                                                      _U.chr("0"),
+                                                                                                      Prelude.show(seconds))))));
+                                                  }();
+                                         };
+                       var $ = Graphics.Input.stringDropDown(A2(List.map,
+                                                                Prelude.show,
+                                                                _L.range(1,1000))),
+                           picker = $._0,
+                           timeAcceleration = $._1;
+                       var timeFactor = A2(Signal._op["<~"],
+                                           function (x)
+                                           {
+                                             return Time.inHours(1000 * A2(Maybe.maybe,
+                                                                           1,
+                                                                           Basics.id)(String.toFloat(x)) / Constants.framerate);
+                                           },
+                                           timeAcceleration);
+                       var $ = Graphics.Input.button("order more beer"),
+                           orderButton = $._0,
+                           orderClicks = $._1;
+                       var $ = Graphics.Input.button("urinate"),
+                           urinateButton = $._0,
+                           urinateClicks = $._1;
+                       var $ = Graphics.Input.button("slam back a brewski"),
+                           chugButton = $._0,
+                           chugClicks = $._1;
+                       var render = F5(function (x,y,state,picka,_v0)
+                                       {
+                                         return function ()
+                                                {
+                                                  switch (_v0.ctor)
+                                                  {case
+                                                   "_Tuple2" :
+                                                     return A6(SpecialEffects.distort,
+                                                               _v0._0,
+                                                               _v0._1,
+                                                               Basics.toFloat(x),
+                                                               Basics.toFloat(y),
+                                                               state.person.bac,
+                                                               state.person.bac)(A2(Graphics.Element.flow,
+                                                                                    Graphics.Element.down,
+                                                                                    _J.toList([A2(Graphics.Element.flow,
+                                                                                                  Graphics.Element.right,
+                                                                                                  _J.toList([chugButton,
+                                                                                                             Text.plainText(" time acceleration: "),
+                                                                                                             picka])),
+                                                                                               A2(Graphics.Element.flow,
+                                                                                                  Graphics.Element.right,
+                                                                                                  _J.toList([Text.plainText("you are an "),
+                                                                                                             Text.plainText(Prelude.show(state.person.weight)),
+                                                                                                             Text.plainText("kg "),
+                                                                                                             Text.plainText(Prelude.show(state.person.sex))])),
+                                                                                               A2(Graphics.Element.flow,
+                                                                                                  Graphics.Element.right,
+                                                                                                  _J.toList([Text.plainText("you got "),
+                                                                                                             Text.plainText(String.left(4)(Prelude.show(state.person.alc))),
+                                                                                                             Text.plainText(" grams of unabsorbed ethanol in ur belly")])),
+                                                                                               A2(Graphics.Element.flow,
+                                                                                                  Graphics.Element.right,
+                                                                                                  _J.toList([Text.plainText("ur bac is: "),
+                                                                                                             Text.plainText(String.left(6)(Prelude.show(state.person.bac)))])),
+                                                                                               Text.plainText(_L.append(A2(peeDisplay,
+                                                                                                                           state.person.urine,
+                                                                                                                           state.person.wetSelf),
+                                                                                                                        state.person.urinating ? " (you are peeing)" : "")),
+                                                                                               A2(Graphics.Element.flow,
+                                                                                                  Graphics.Element.right,
+                                                                                                  _J.toList([Text.plainText("you\'ve had "),
+                                                                                                             Text.plainText(Prelude.show(state.drinks)),
+                                                                                                             Text.plainText(" beers")])),
+                                                                                               A2(Graphics.Element.flow,
+                                                                                                  Graphics.Element.right,
+                                                                                                  _J.toList([Text.plainText("u been at the bar for: "),
+                                                                                                             Text.plainText(timeDisplay(state.elapsed))])),
+                                                                                               urinateButton])));}
+                                                  _E.Case($moduleName,"between lines 21 and 30");
+                                                }();
+                                       });
+                       _elm.Interface.values = {_op: _op, chugButton: chugButton, chugClicks: chugClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, picker: picker, timeAcceleration: timeAcceleration, timeFactor: timeFactor, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
+                       return _elm.Interface.values;
+                     };Elm.Constants = Elm.Constants || {};
+Elm.Constants.make = function (_elm)
+                     {
+                       _elm.Constants = _elm.Constants || {};
+                       if (_elm.Constants.values)
+                       return _elm.Constants.values;
+                       var _N = Elm.Native,
+                           _U = _N.Utils.make(_elm),
+                           _L = _N.List.make(_elm),
+                           _E = _N.Error.make(_elm),
+                           _J = _N.JavaScript.make(_elm),
+                           $moduleName = "Constants";
+                       var Basics = Elm.Basics.make(_elm);
+                       var Color = Elm.Color.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Element = Elm.Graphics.Element.make(_elm);
+                       var List = Elm.List.make(_elm);
+                       var Maybe = Elm.Maybe.make(_elm);
+                       var Native = Native || {};
+                       Native.Ports = Elm.Native.Ports.make(_elm);
+                       var Prelude = Elm.Prelude.make(_elm);
+                       var Signal = Elm.Signal.make(_elm);
+                       var String = Elm.String.make(_elm);
+                       var Text = Elm.Text.make(_elm);
+                       var Time = Elm.Time.make(_elm);
+                       var _op = {};
+                       var urinationRate = 10 * 3600;
+                       var sipRate = 10 * 3600;
+                       var gulpRate = 25 * 3600;
+                       var absorptionRate = 40;
+                       var framerate = 30;
+                       _elm.Constants.values = {_op: _op, framerate: framerate, absorptionRate: absorptionRate, gulpRate: gulpRate, sipRate: sipRate, urinationRate: urinationRate};
+                       return _elm.Constants.values;
+                     };Elm.Model = Elm.Model || {};
+Elm.Model.make = function (_elm)
+                 {
+                   _elm.Model = _elm.Model || {};
+                   if (_elm.Model.values)
+                   return _elm.Model.values;
+                   var _N = Elm.Native,
+                       _U = _N.Utils.make(_elm),
+                       _L = _N.List.make(_elm),
+                       _E = _N.Error.make(_elm),
+                       _J = _N.JavaScript.make(_elm),
+                       $moduleName = "Model";
+                   var Basics = Elm.Basics.make(_elm);
+                   var Color = Elm.Color.make(_elm);
+                   var Graphics = Graphics || {};
+                   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                   var Graphics = Graphics || {};
+                   Graphics.Element = Elm.Graphics.Element.make(_elm);
+                   var List = Elm.List.make(_elm);
+                   var Maybe = Elm.Maybe.make(_elm);
+                   var Native = Native || {};
+                   Native.Ports = Elm.Native.Ports.make(_elm);
+                   var Prelude = Elm.Prelude.make(_elm);
+                   var Signal = Elm.Signal.make(_elm);
+                   var String = Elm.String.make(_elm);
+                   var Text = Elm.Text.make(_elm);
+                   var Time = Elm.Time.make(_elm);
+                   var _op = {};
+                   var Environment = F2(function (a,b)
+                                        {
+                                          return {_: {}, state: b, windowSize: a};
+                                        });
+                   var Timing = F3(function (a,b,c)
+                                   {
+                                     return {_: {}, beerClicks: a, timeStep: c, urineClicks: b};
+                                   });
+                   var Score = F2(function (a,b)
+                                  {
+                                    return {_: {}, overallScore: a, styleScore: b};
+                                  });
+                   var Beer = F5(function (a,b,c,d,e)
+                                 {
+                                   return {_: {}, abv: d, brewery: b, name: a, score: e, style: c};
+                                 });
+                   var Person = F8(function (a,b,c,d,e,f,g,h)
+                                   {
+                                     return {_: {}, alc: d, bac: b, beers: h, sex: a, urinating: f, urine: e, weight: c, wetSelf: g};
+                                   });
+                   var State = F5(function (a,b,c,d,e)
+                                  {
+                                    return {_: {}, drinks: c, elapsed: e, oldBeerClicks: b, oldUrineClicks: d, person: a};
+                                  });
+                   var Female = {ctor: "Female"};
+                   var Male = {ctor: "Male"};
+                   _elm.Model.values = {_op: _op, Male: Male, Female: Female, State: State, Person: Person, Beer: Beer, Score: Score, Timing: Timing, Environment: Environment};
+                   return _elm.Model.values;
+                 };Elm.SpecialEffects = Elm.SpecialEffects || {};
+Elm.SpecialEffects.make = function (_elm)
+                          {
+                            _elm.SpecialEffects = _elm.SpecialEffects || {};
+                            if (_elm.SpecialEffects.values)
+                            return _elm.SpecialEffects.values;
+                            var _N = Elm.Native,
+                                _U = _N.Utils.make(_elm),
+                                _L = _N.List.make(_elm),
+                                _E = _N.Error.make(_elm),
+                                _J = _N.JavaScript.make(_elm),
+                                $moduleName = "SpecialEffects";
+                            var Basics = Elm.Basics.make(_elm);
+                            var Color = Elm.Color.make(_elm);
+                            var Graphics = Graphics || {};
+                            Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                            var Graphics = Graphics || {};
+                            Graphics.Element = Elm.Graphics.Element.make(_elm);
+                            var List = Elm.List.make(_elm);
+                            var Maybe = Elm.Maybe.make(_elm);
+                            var Native = Native || {};
+                            Native.Ports = Elm.Native.Ports.make(_elm);
+                            var Prelude = Elm.Prelude.make(_elm);
+                            var Signal = Elm.Signal.make(_elm);
+                            var String = Elm.String.make(_elm);
+                            var Text = Elm.Text.make(_elm);
+                            var Time = Elm.Time.make(_elm);
+                            var Transform2D = Elm.Transform2D.make(_elm);
+                            var _op = {};
+                            var fuzzy = F3(function (t,bac,e)
+                                           {
+                                             return function ()
+                                                    {
+                                                      var y = 20 * bac * Basics.cos(Basics.toFloat(t) / 10);
+                                                      var x = 50 * bac * Basics.sin(Basics.toFloat(t) / 15);
+                                                      var e$ = Graphics.Collage.toForm(e);
+                                                      return A3(Graphics.Collage.collage,
+                                                                500,
+                                                                500,
+                                                                _J.toList([Graphics.Collage.alpha(0.7)(Graphics.Collage.move({ctor: "_Tuple2", _0: 0 - x, _1: y})(e$)),
+                                                                           Graphics.Collage.alpha(0.7)(Graphics.Collage.move({ctor: "_Tuple2", _0: x, _1: y})(e$))]));
+                                                    }();
+                                           });
+                            var plain = F7(function (w,h,x,y,sx,sy,element)
+                                           {
+                                             return A3(Graphics.Collage.collage,
+                                                       w,
+                                                       h,
+                                                       _J.toList([Graphics.Collage.toForm(element)]));
+                                           });
+                            var scale = function (x)
+                                        {
+                                          return A6(Transform2D.matrix,x,0,0,x,1,1);
+                                        };
+                            var shear = function (x)
+                                        {
+                                          return A6(Transform2D.matrix,1,0.2 * x,0,1,1,1);
+                                        };
+                            var trans = F2(function (x,y)
+                                           {
+                                             return A2(Transform2D.multiply,shear(x),scale(y));
+                                           });
+                            var distort = F7(function (w,h,x,y,sx,sy,element)
+                                             {
+                                               return A2(Graphics.Collage.collage,
+                                                         w,
+                                                         h)(_J.toList([A2(Graphics.Collage.groupTransform,
+                                                                          A2(trans,
+                                                                             sx * Basics.sin(x / 60),
+                                                                             0.95 + 0.5 * Basics.sin(sy * y / 10)),
+                                                                          _J.toList([Graphics.Collage.toForm(element)]))]));
+                                             });
+                            _elm.SpecialEffects.values = {_op: _op, distort: distort, plain: plain};
+                            return _elm.SpecialEffects.values;
+                          };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script><noscript></noscript></body></html>
