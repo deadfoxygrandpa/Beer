@@ -2,6 +2,7 @@ module Main where
 
 -- Standard Library imports
 import Window
+import Keyboard
 
 -- Project imports
 import Interface
@@ -23,9 +24,10 @@ stateSignal : Signal Model.State
 stateSignal = foldp Update.updateState 
                     initialState
                     ( sampleOn (fps Constants.framerate) 
-                        ( (\x y z -> Model.Timing x y z) <~ (count Interface.chugClicks) 
-                                                          ~ (count Interface.urinateClicks)
-                                                          ~ Interface.timeFactor
+                        ( (\x y z s -> Model.Timing x y z s) <~ (count Interface.chugClicks) 
+                                                              ~ (count Interface.urinateClicks)
+                                                              ~ Interface.timeFactor
+                                                              ~ Keyboard.space
                         )
                     )
 

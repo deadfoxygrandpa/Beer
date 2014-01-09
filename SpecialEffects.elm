@@ -1,4 +1,4 @@
-module SpecialEffects (distort, plain) where
+module SpecialEffects (distort, plain, fuzzy) where
 
 -- Standard Library imports
 import Transform2D
@@ -15,15 +15,8 @@ scale x = Transform2D.matrix x 0 0 x 1 1
 trans : Float -> Float -> Transform2D.Transform2D
 trans x y = Transform2D.multiply (shear x) (scale y)
 
-distort : Int -> Int -> Float -> Float -> Float -> Float -> Element -> Element
-distort w h x y sx sy element = collage w h <| 
-    [ groupTransform (trans (sx * (sin <| x/60)) ((0.95 + (0.5 * (sin <| sy * y/10))))) [toForm element] ]
-
-plain : Int -> Int -> Float -> Float -> Float -> Float -> Element -> Element
-plain w h x y sx sy element = collage w h [toForm element]
-
-distort2 : Model.Environment -> Element -> Element
-distort2 environment element = 
+distort : Model.SpecialEffect
+distort environment element = 
     let (w, h) = environment.windowSize
         sx = environment.state.person.bac
         sy = environment.state.person.bac
@@ -32,7 +25,12 @@ distort2 environment element =
     in collage w h <|
     [ groupTransform (trans (sx * (sin <| x/60)) ((0.95 + (0.5 * (sin <| sy * y/10))))) [toForm element] ]
 
-fuzzy : Model.Environment -> Element -> Element
+plain : Model.SpecialEffect
+plain environment element =
+    let (w, h) = environment.windowSize
+    in collage w h [toForm element]    
+
+fuzzy : Model.SpecialEffect
 fuzzy environment element = 
     let form = toForm element
         t = environment.time
