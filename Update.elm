@@ -20,12 +20,14 @@ drank person bac =
     in (10 * bac * bw * person.weight) / (1.2 * 0.806)
 
 updateState : Model.Timing -> Model.State -> Model.State
-updateState {beerClicks, urineClicks, timeStep, sipPress} ({person, oldBeerClicks, drinks, oldUrineClicks, elapsed} as state) =
+updateState {beerClicks, urineClicks, timeStep, sipPress, gulpPress} ({person, oldBeerClicks, drinks, oldUrineClicks, elapsed} as state) =
     let newElapsed = elapsed + timeStep
-        (person', volume) = if sipPress then sip timeStep person else (person, 0)
+        (person', volume) = if | sipPress  -> sip timeStep person 
+                               | gulpPress -> gulp timeStep person
+                               | otherwise ->  (person, 0)
         drinks' = drinks + (volume / 355)
     in if | beerClicks  > oldBeerClicks  -> 
-                {state| person <- {person'| alc <- person.alc + 10}
+                {state| person <- {person'| alc <- person.alc + 355*((snd person.beers).abv / 100)*Constants.ethanolDensity}
                       , drinks <- drinks' + 1
                       , oldBeerClicks <- beerClicks
                 }
@@ -40,8 +42,14 @@ updateState {beerClicks, urineClicks, timeStep, sipPress} ({person, oldBeerClick
                 }
 
 sip : Float -> Model.Person -> (Model.Person, Float)
-sip t person = 
-    let volume = Constants.sipRate * t
+sip = consume Constants.sipRate
+
+gulp : Float -> Model.Person -> (Model.Person, Float)
+gulp = consume Constants.gulpRate
+
+consume : Float -> Float -> Model.Person -> (Model.Person, Float)    
+consume rate t person =
+    let volume = rate * t
         alcVolume = volume * ((snd person.beers).abv / 100)
         grams = Constants.ethanolDensity * alcVolume
     in ({person| alc <- person.alc + grams}, volume)

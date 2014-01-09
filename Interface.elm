@@ -28,6 +28,7 @@ box s (w, h) c = color black . container w h middle
 
 (chugButton, chugClicks) = Input.button "slam back a brewski"
 (sipButton, sipClicks) = Input.button "sip your beer"
+(gulpButton, gulpClicks) = Input.button "gulp down some beer"
 (urinateButton, urinateClicks) = Input.button "urinate"
 (orderButton, orderClicks) = Input.button "order more beer"
 --(picker, timeAcceleration) = Input.stringDropDown <| map show [1..1000]
@@ -35,14 +36,17 @@ box s (w, h) c = color black . container w h middle
 timeFactor = (\x -> inHours (1000 * (maybe 1 id <| String.toFloat x) / Constants.framerate)) <~ timeAcceleration
 
 instructions : Element
-instructions = flow right [ container 100 50 middle <| plainText "controls: "
-                          , flow down <| map plainText [ "spacebar: sip beer"
-                                                       , "c: chug beer (slam back a brewski)"
-                                                       , "u: urinate"
-                                                       , "the big x in the top right if you're on windows: win game"
-                                                       , "clickar buttons: self explanatory" 
-                                                       ]
-                          ]
+instructions = 
+    let controls = flow down <| map plainText [ "spacebar: sip beer"
+                                              , "g: gulp some beer"
+                                              , "c: chug beer (slam back a brewski)"
+                                              , "u: urinate"
+                                              , "ctrl + w: win game"
+                                              , "clickar buttons: self explanatory" 
+                                              ]
+    in flow right [ container 100 (heightOf controls) middle <| plainText "controls: "
+                  , controls
+                  ]
 
 render : Int -> Model.State -> (Int, Int) -> Element
 render x state (w, h) = flow outward [instructions,

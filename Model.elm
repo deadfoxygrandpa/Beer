@@ -8,7 +8,7 @@ type Person = {sex : Sex, bac : Float, weight : Float, alc : Float, urine : Floa
 type Beer = {name : String, brewery : String, style : BeerStyle, abv : Float, score : Score}
 type Score = {overallScore : Float, styleScore : Float}
 
-type Timing = {beerClicks : Int, urineClicks : Int, timeStep : Float, sipPress : Bool}
+type Timing = {beerClicks : Int, urineClicks : Int, timeStep : Float, sipPress : Bool, gulpPress : Bool}
 type Environment = {windowSize : (Int, Int), state : State, time : Float}
 
 type SpecialEffect = Environment -> Element -> Element
