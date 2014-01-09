@@ -22,25 +22,29 @@ drank person bac =
 updateState : Model.Timing -> Model.State -> Model.State
 updateState {beerClicks, urineClicks, timeStep, sipPress} ({person, oldBeerClicks, drinks, oldUrineClicks, elapsed} as state) =
     let newElapsed = elapsed + timeStep
-        person' = if sipPress then sip timeStep person else person
+        (person', volume) = if sipPress then sip timeStep person else (person, 0)
+        drinks' = drinks + (volume / 355)
     in if | beerClicks  > oldBeerClicks  -> 
                 {state| person <- {person'| alc <- person.alc + 10}
-                      , drinks <- drinks + 1
+                      , drinks <- drinks' + 1
                       , oldBeerClicks <- beerClicks
                 }
           | urineClicks > oldUrineClicks && person.urine > 10 -> 
-                {state| person <- {person'| urinating <- True}}
+                {state| person <- {person'| urinating <- True}
+                      , drinks <- drinks'}
           | otherwise                    -> 
                 {state| person <- process person' timeStep
                       , elapsed <- newElapsed
                       , oldUrineClicks <- urineClicks
+                      , drinks <- drinks'
                 }
 
-sip : Float -> Model.Person -> Model.Person
+sip : Float -> Model.Person -> (Model.Person, Float)
 sip t person = 
     let volume = Constants.sipRate * t
-        grams = Constants.ethanolDensity * volume
-    in {person| alc <- person.alc + grams}
+        alcVolume = volume * ((snd person.beers).abv / 100)
+        grams = Constants.ethanolDensity * alcVolume
+    in ({person| alc <- person.alc + grams}, volume)
 
 process : Model.Person -> Float -> Model.Person    
 process person timeStep = 
