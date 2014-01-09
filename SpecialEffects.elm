@@ -28,7 +28,7 @@ distort environment element =
 plain : Model.SpecialEffect
 plain environment element =
     let (w, h) = environment.windowSize
-    in collage w h [toForm element]    
+    in container w h middle element
 
 fuzzy : Model.SpecialEffect
 fuzzy environment element = 
