@@ -25,6 +25,7 @@ updateState {beerClicks, urineClicks, timeStep} ({person, oldBeerClicks, drinks,
     in if | beerClicks  > oldBeerClicks  -> 
                 {state| person <- {person| alc <- person.alc + 10}
                       , drinks <- drinks + 1
+                      , oldBeerClicks <- beerClicks
                 }
           | urineClicks > oldUrineClicks && person.urine > 10 -> 
                 {state| person <- {person| urinating <- True}}
