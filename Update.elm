@@ -33,7 +33,8 @@ updateState {beerClicks, urineClicks, timeStep, sipPress, gulpPress} ({person, o
                 }
           | urineClicks > oldUrineClicks && person.urine > 10 -> 
                 {state| person <- {person'| urinating <- True}
-                      , drinks <- drinks'}
+                      , drinks <- drinks'
+                      , oldUrineClicks <- urineClicks}
           | otherwise                    -> 
                 {state| person <- process person' timeStep
                       , elapsed <- newElapsed

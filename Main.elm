@@ -30,10 +30,10 @@ stateSignal = foldp Update.updateState
                     ( sampleOn frames
                         ( (\x y z s g -> Model.Timing x y z s g) 
                             <~ (count <| merge Interface.chugClicks (Interface.keyPressed 'C')) 
-                            ~ (count <| merge Interface.urinateClicks (Interface.keyPressed 'U'))
-                            ~ Interface.timeFactor
-                            ~ Keyboard.space
-                            ~ (Keyboard.isDown <| Char.toCode 'G')
+                             ~ (count <| merge Interface.urinateClicks (Interface.keyPressed 'U'))
+                             ~ Interface.timeFactor
+                             ~ Keyboard.space
+                             ~ (Keyboard.isDown <| Char.toCode 'G')
                         )
                     )
 
