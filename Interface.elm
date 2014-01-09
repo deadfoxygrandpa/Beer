@@ -18,7 +18,7 @@ import Constants
 timeFactor = (\x -> inHours (1000 * (maybe 1 id <| String.toFloat x) / Constants.framerate)) <~ timeAcceleration
 
 render : Int -> Int -> Model.State -> Element -> (Int, Int) -> Element
-render x y state picka (w, h) = SpecialEffects.distort w h (toFloat x) (toFloat y) state.person.bac state.person.bac <|
+render x y state picka (w, h) = SpecialEffects.distort2 (Model.Environment (w, h) state (toFloat x)) <|
     flow down [ flow right [chugButton, plainText " time acceleration: ", picka]
               , flow right [plainText "you are an ", plainText . show <| state.person.weight, plainText "kg ", plainText . show <| state.person.sex]
               , flow right [plainText "you got ", plainText . String.left 4 . show <| state.person.alc, plainText " grams of unabsorbed ethanol in ur belly"]

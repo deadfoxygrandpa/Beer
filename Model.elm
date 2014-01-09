@@ -9,4 +9,4 @@ type Beer = {name : String, brewery : String, style : BeerStyle, abv : Float, sc
 type Score = {overallScore : Float, styleScore : Float}
 
 type Timing = {beerClicks : Int, urineClicks : Int, timeStep : Float}
-type Environment = {windowSize : (Int, Int), state : State}
+type Environment = {windowSize : (Int, Int), state : State, time : Float}
