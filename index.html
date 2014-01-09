@@ -1,3 +1,4 @@
+
 <!DOCTYPE HTML>
 <html><head><meta charset="UTF-8"><title>Main</title><script type="text/javascript" src="elm-runtime.js"></script><script type="text/javascript">Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm)
@@ -65,13 +66,11 @@ Elm.Main.make = function (_elm)
                   var main = A2(Signal._op["~"],
                                 A2(Signal._op["~"],
                                    A2(Signal._op["~"],
-                                      A2(Signal._op["~"],
-                                         A2(Signal._op["<~"],
-                                            Interface.render,
-                                            Signal.count(Time.fps(52))),
-                                         Signal.count(Time.fps(43))),
-                                      stateSignal),
-                                   Interface.picker),
+                                      A2(Signal._op["<~"],
+                                         Interface.render,
+                                         Signal.count(Time.fps(52))),
+                                      Signal.count(Time.fps(43))),
+                                   stateSignal),
                                 Window.dimensions);
                   _elm.Main.values = {_op: _op, badBeer: badBeer, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
                   return _elm.Main.values;
@@ -159,8 +158,11 @@ Elm.Update.make = function (_elm)
                                    return function ()
                                           {
                                             var volume = Constants.sipRate * t;
-                                            var grams = Constants.ethanolDensity * volume;
-                                            return _U.replace([["alc",person.alc + grams]],person);
+                                            var alcVolume = volume * (Basics.snd(person.beers).abv / 100);
+                                            var grams = Constants.ethanolDensity * alcVolume;
+                                            return {ctor: "_Tuple2", _0: _U.replace([["alc",
+                                                                                      person.alc + grams]],
+                                                                                    person), _1: volume};
                                           }();
                                  });
                     var drank = F2(function (person,bac)
@@ -231,7 +233,7 @@ Elm.Update.make = function (_elm)
                                                             "Male" :
                                                               return 1.5e-2;}
                                                            _E.Case($moduleName,
-                                                                   "between lines 47 and 50");
+                                                                   "between lines 51 and 54");
                                                          }();
                                                 var m = mr * timeStep;
                                                 var metabolized = _U.cmp(m,
@@ -259,9 +261,12 @@ Elm.Update.make = function (_elm)
                                                            {
                                                              return function ()
                                                                     {
-                                                                      var person$ = _v3.sipPress ? A2(sip,
-                                                                                                      _v3.timeStep,
-                                                                                                      _v4.person) : _v4.person;
+                                                                      var $ = _v3.sipPress ? A2(sip,
+                                                                                                _v3.timeStep,
+                                                                                                _v4.person) : {ctor: "_Tuple2", _0: _v4.person, _1: 0},
+                                                                          person$ = $._0,
+                                                                          volume = $._1;
+                                                                      var drinks$ = _v4.drinks + volume / 355;
                                                                       var newElapsed = _v4.elapsed + _v3.timeStep;
                                                                       return _U.cmp(_v3.beerClicks,
                                                                                     _v4.oldBeerClicks) > 0 ? _U.replace([["person",
@@ -269,7 +274,7 @@ Elm.Update.make = function (_elm)
                                                                                                                                        _v4.person.alc + 10]],
                                                                                                                                      person$)],
                                                                                                                          ["drinks",
-                                                                                                                          _v4.drinks + 1],
+                                                                                                                          drinks$ + 1],
                                                                                                                          ["oldBeerClicks",
                                                                                                                           _v3.beerClicks]],
                                                                                                                         _v4) : _U.cmp(_v3.urineClicks,
@@ -277,7 +282,9 @@ Elm.Update.make = function (_elm)
                                                                                                                                                                         10) > 0 ? _U.replace([["person",
                                                                                                                                                                                                _U.replace([["urinating",
                                                                                                                                                                                                             true]],
-                                                                                                                                                                                                          person$)]],
+                                                                                                                                                                                                          person$)],
+                                                                                                                                                                                              ["drinks",
+                                                                                                                                                                                               drinks$]],
                                                                                                                                                                                              _v4) : _U.replace([["person",
                                                                                                                                                                                                                  A2(process,
                                                                                                                                                                                                                     person$,
@@ -285,7 +292,9 @@ Elm.Update.make = function (_elm)
                                                                                                                                                                                                                 ["elapsed",
                                                                                                                                                                                                                  newElapsed],
                                                                                                                                                                                                                 ["oldUrineClicks",
-                                                                                                                                                                                                                 _v3.urineClicks]],
+                                                                                                                                                                                                                 _v3.urineClicks],
+                                                                                                                                                                                                                ["drinks",
+                                                                                                                                                                                                                 drinks$]],
                                                                                                                                                                                                                _v4);
                                                                     }();
                                                            }();
@@ -363,19 +372,6 @@ Elm.Interface.make = function (_elm)
                                                                                                       Prelude.show(seconds))))));
                                                   }();
                                          };
-                       var $ = Graphics.Input.stringDropDown(A2(List.map,
-                                                                Prelude.show,
-                                                                _L.range(1,1000))),
-                           picker = $._0,
-                           timeAcceleration = $._1;
-                       var timeFactor = A2(Signal._op["<~"],
-                                           function (x)
-                                           {
-                                             return Time.inHours(1000 * A2(Maybe.maybe,
-                                                                           1,
-                                                                           Basics.id)(String.toFloat(x)) / Constants.framerate);
-                                           },
-                                           timeAcceleration);
                        var $ = Graphics.Input.button("order more beer"),
                            orderButton = $._0,
                            orderClicks = $._1;
@@ -388,7 +384,33 @@ Elm.Interface.make = function (_elm)
                        var $ = Graphics.Input.button("slam back a brewski"),
                            chugButton = $._0,
                            chugClicks = $._1;
-                       var render = F5(function (x,y,state,picka,_v0)
+                       var makeButtons = F2(function (initial,names)
+                                            {
+                                              return function ()
+                                                     {
+                                                       var pool = Graphics.Input.buttons(initial);
+                                                       return {ctor: "_Tuple2", _0: pool.events, _1: A2(List.map,
+                                                                                                        function (s)
+                                                                                                        {
+                                                                                                          return A2(pool.button,
+                                                                                                                    s,
+                                                                                                                    s);
+                                                                                                        },
+                                                                                                        names)};
+                                                     }();
+                                            });
+                       var $ = A2(makeButtons,"1",_J.toList(["1","60","600"])),
+                           timeAcceleration = $._0,
+                           timeAccelerationButtons = $._1;
+                       var timeFactor = A2(Signal._op["<~"],
+                                           function (x)
+                                           {
+                                             return Time.inHours(1000 * A2(Maybe.maybe,
+                                                                           1,
+                                                                           Basics.id)(String.toFloat(x)) / Constants.framerate);
+                                           },
+                                           timeAcceleration);
+                       var render = F4(function (x,y,state,_v0)
                                        {
                                          return function ()
                                                 {
@@ -398,7 +420,7 @@ Elm.Interface.make = function (_elm)
                                                      return A2(Graphics.Element.flow,
                                                                Graphics.Element.outward,
                                                                _J.toList([Text.plainText("Controls: to sip beer, hold the space bar"),
-                                                                          SpecialEffects.plain(A3(Model.Environment,
+                                                                          SpecialEffects.fuzzy(A3(Model.Environment,
                                                                                                   {ctor: "_Tuple2", _0: _v0._0, _1: _v0._1},
                                                                                                   state,
                                                                                                   Basics.toFloat(x)))(A2(Graphics.Element.flow,
@@ -407,7 +429,9 @@ Elm.Interface.make = function (_elm)
                                                                                                                                        Graphics.Element.right,
                                                                                                                                        _J.toList([chugButton,
                                                                                                                                                   Text.plainText(" time acceleration: "),
-                                                                                                                                                  picka])),
+                                                                                                                                                  A2(Graphics.Element.flow,
+                                                                                                                                                     Graphics.Element.right,
+                                                                                                                                                     timeAccelerationButtons)])),
                                                                                                                                     A2(Graphics.Element.flow,
                                                                                                                                        Graphics.Element.right,
                                                                                                                                        _J.toList([Text.plainText("you are an "),
@@ -441,10 +465,10 @@ Elm.Interface.make = function (_elm)
                                                                                                                                        _J.toList([Text.plainText("u been at the bar for: "),
                                                                                                                                                   Text.plainText(timeDisplay(state.elapsed))])),
                                                                                                                                     urinateButton])))]));}
-                                                  _E.Case($moduleName,"between lines 22 and 33");
+                                                  _E.Case($moduleName,"between lines 29 and 40");
                                                 }();
                                        });
-                       _elm.Interface.values = {_op: _op, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, picker: picker, timeAcceleration: timeAcceleration, timeFactor: timeFactor, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
+                       _elm.Interface.values = {_op: _op, makeButtons: makeButtons, timeAcceleration: timeAcceleration, timeAccelerationButtons: timeAccelerationButtons, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, timeFactor: timeFactor, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
                        return _elm.Interface.values;
                      };Elm.Constants = Elm.Constants || {};
 Elm.Constants.make = function (_elm)
@@ -475,7 +499,7 @@ Elm.Constants.make = function (_elm)
                        var Time = Elm.Time.make(_elm);
                        var _op = {};
                        var urinationRate = 10 * 3600;
-                       var sipRate = 5 * 3600;
+                       var sipRate = 10 * 3600;
                        var gulpRate = 25 * 3600;
                        var absorptionRate = 40;
                        var ethanolDensity = 0.789;
@@ -520,10 +544,13 @@ Elm.SpecialEffects.make = function (_elm)
                                                       var t = environment.time;
                                                       var x = 50 * bac * Basics.sin(t / 15);
                                                       var y = 20 * bac * Basics.cos(t / 10);
+                                                      var $ = environment.windowSize,
+                                                          w = $._0,
+                                                          h = $._1;
                                                       var form = Graphics.Collage.toForm(element);
                                                       return A3(Graphics.Collage.collage,
-                                                                500,
-                                                                500,
+                                                                w,
+                                                                h,
                                                                 _J.toList([Graphics.Collage.alpha(0.7)(Graphics.Collage.move({ctor: "_Tuple2", _0: 0 - x, _1: y})(form)),
                                                                            Graphics.Collage.alpha(0.7)(Graphics.Collage.move({ctor: "_Tuple2", _0: x, _1: y})(form))]));
                                                     }();
@@ -535,10 +562,11 @@ Elm.SpecialEffects.make = function (_elm)
                                                       var $ = environment.windowSize,
                                                           w = $._0,
                                                           h = $._1;
-                                                      return A3(Graphics.Collage.collage,
+                                                      return A4(Graphics.Element.container,
                                                                 w,
                                                                 h,
-                                                                _J.toList([Graphics.Collage.toForm(element)]));
+                                                                Graphics.Element.middle,
+                                                                element);
                                                     }();
                                            });
                             var scale = function (x)
