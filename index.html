@@ -13,6 +13,7 @@ Elm.Main.make = function (_elm)
                       $moduleName = "Main";
                   var Basics = Elm.Basics.make(_elm);
                   var BeerList = Elm.BeerList.make(_elm);
+                  var Char = Elm.Char.make(_elm);
                   var Color = Elm.Color.make(_elm);
                   var Constants = Elm.Constants.make(_elm);
                   var Graphics = Graphics || {};
@@ -34,16 +35,16 @@ Elm.Main.make = function (_elm)
                   var Update = Elm.Update.make(_elm);
                   var Window = Elm.Window.make(_elm);
                   var _op = {};
-                  var badBeer = BeerList.budweiser;
+                  var badBeer = BeerList.tsingtao;
                   var initialPerson = A8(Model.Person,
                                          Model.Male,
                                          0,
-                                         10,
+                                         80,
                                          0,
                                          0,
                                          false,
                                          false,
-                                         {ctor: "_Tuple2", _0: 1, _1: badBeer});
+                                         {ctor: "_Tuple2", _0: 355, _1: badBeer});
                   var initialState = A5(Model.State,initialPerson,0,0,0,0);
                   var frames = Time.fps(Constants.framerate);
                   var stateSignal = A3(Signal.foldp,
@@ -54,19 +55,21 @@ Elm.Main.make = function (_elm)
                                           A2(Signal._op["~"],
                                              A2(Signal._op["~"],
                                                 A2(Signal._op["~"],
-                                                   A2(Signal._op["<~"],
-                                                      F4(function (x,y,z,s)
-                                                         {
-                                                           return A4(Model.Timing,x,y,z,s);
-                                                         }),
+                                                   A2(Signal._op["~"],
+                                                      A2(Signal._op["<~"],
+                                                         F5(function (x,y,z,s,g)
+                                                            {
+                                                              return A5(Model.Timing,x,y,z,s,g);
+                                                            }),
+                                                         Signal.count(A2(Signal.merge,
+                                                                         Interface.chugClicks,
+                                                                         Interface.keyPressed(_U.chr("C"))))),
                                                       Signal.count(A2(Signal.merge,
-                                                                      Interface.chugClicks,
-                                                                      Interface.keyPressed(_U.chr("C"))))),
-                                                   Signal.count(A2(Signal.merge,
-                                                                   Interface.urinateClicks,
-                                                                   Interface.keyPressed(_U.chr("U"))))),
-                                                Interface.timeFactor),
-                                             Keyboard.space)));
+                                                                      Interface.urinateClicks,
+                                                                      Interface.keyPressed(_U.chr("U"))))),
+                                                   Interface.timeFactor),
+                                                Keyboard.space),
+                                             Keyboard.isDown(Char.toCode(_U.chr("G"))))));
                   var main = A2(Signal._op["~"],
                                 A2(Signal._op["~"],
                                    A2(Signal._op["<~"],Interface.render,Signal.count(frames)),
@@ -121,7 +124,13 @@ Elm.BeerList.make = function (_elm)
                                          Model.PaleLager,
                                          5,
                                          A2(Model.Score,0,3));
-                      _elm.BeerList.values = {_op: _op, budweiser: budweiser, carlsberg: carlsberg, londonPride: londonPride};
+                      var tsingtao = A5(Model.Beer,
+                                        "Tsingtao",
+                                        "Tsingtao Brewery",
+                                        Model.PaleLager,
+                                        4.3,
+                                        A2(Model.Score,6,49));
+                      _elm.BeerList.values = {_op: _op, tsingtao: tsingtao, budweiser: budweiser, carlsberg: carlsberg, londonPride: londonPride};
                       return _elm.BeerList.values;
                     };Elm.Update = Elm.Update || {};
 Elm.Update.make = function (_elm)
@@ -153,18 +162,20 @@ Elm.Update.make = function (_elm)
                     var Text = Elm.Text.make(_elm);
                     var Time = Elm.Time.make(_elm);
                     var _op = {};
-                    var sip = F2(function (t,person)
-                                 {
-                                   return function ()
-                                          {
-                                            var volume = Constants.sipRate * t;
-                                            var alcVolume = volume * (Basics.snd(person.beers).abv / 100);
-                                            var grams = Constants.ethanolDensity * alcVolume;
-                                            return {ctor: "_Tuple2", _0: _U.replace([["alc",
-                                                                                      person.alc + grams]],
-                                                                                    person), _1: volume};
-                                          }();
-                                 });
+                    var consume = F3(function (rate,t,person)
+                                     {
+                                       return function ()
+                                              {
+                                                var volume = rate * t;
+                                                var alcVolume = volume * (Basics.snd(person.beers).abv / 100);
+                                                var grams = Constants.ethanolDensity * alcVolume;
+                                                return {ctor: "_Tuple2", _0: _U.replace([["alc",
+                                                                                          person.alc + grams]],
+                                                                                        person), _1: volume};
+                                              }();
+                                     });
+                    var gulp = consume(Constants.gulpRate);
+                    var sip = consume(Constants.sipRate);
                     var drank = F2(function (person,bac)
                                    {
                                      return function ()
@@ -233,7 +244,7 @@ Elm.Update.make = function (_elm)
                                                             "Male" :
                                                               return 1.5e-2;}
                                                            _E.Case($moduleName,
-                                                                   "between lines 51 and 54");
+                                                                   "between lines 59 and 62");
                                                          }();
                                                 var m = mr * timeStep;
                                                 var metabolized = _U.cmp(m,
@@ -263,7 +274,9 @@ Elm.Update.make = function (_elm)
                                                                     {
                                                                       var $ = _v3.sipPress ? A2(sip,
                                                                                                 _v3.timeStep,
-                                                                                                _v4.person) : {ctor: "_Tuple2", _0: _v4.person, _1: 0},
+                                                                                                _v4.person) : _v3.gulpPress ? A2(gulp,
+                                                                                                                                 _v3.timeStep,
+                                                                                                                                 _v4.person) : {ctor: "_Tuple2", _0: _v4.person, _1: 0},
                                                                           person$ = $._0,
                                                                           volume = $._1;
                                                                       var drinks$ = _v4.drinks + volume / 355;
@@ -271,7 +284,7 @@ Elm.Update.make = function (_elm)
                                                                       return _U.cmp(_v3.beerClicks,
                                                                                     _v4.oldBeerClicks) > 0 ? _U.replace([["person",
                                                                                                                           _U.replace([["alc",
-                                                                                                                                       _v4.person.alc + 10]],
+                                                                                                                                       _v4.person.alc + 355 * (Basics.snd(_v4.person.beers).abv / 100) * Constants.ethanolDensity]],
                                                                                                                                      person$)],
                                                                                                                          ["drinks",
                                                                                                                           drinks$ + 1],
@@ -300,7 +313,7 @@ Elm.Update.make = function (_elm)
                                                            }();
                                                   }();
                                          });
-                    _elm.Update.values = {_op: _op, drink: drink, drank: drank, updateState: updateState, sip: sip, process: process};
+                    _elm.Update.values = {_op: _op, drink: drink, drank: drank, updateState: updateState, sip: sip, gulp: gulp, consume: consume, process: process};
                     return _elm.Update.values;
                   };Elm.Interface = Elm.Interface || {};
 Elm.Interface.make = function (_elm)
@@ -374,25 +387,33 @@ Elm.Interface.make = function (_elm)
                                                                                                       Prelude.show(seconds))))));
                                                   }();
                                          };
-                       var instructions = A2(Graphics.Element.flow,
-                                             Graphics.Element.right,
-                                             _J.toList([A3(Graphics.Element.container,
-                                                           100,
-                                                           50,
-                                                           Graphics.Element.middle)(Text.plainText("controls: ")),
-                                                        Graphics.Element.flow(Graphics.Element.down)(A2(List.map,
-                                                                                                        Text.plainText,
-                                                                                                        _J.toList(["spacebar: sip beer",
-                                                                                                                   "c: chug beer (slam back a brewski)",
-                                                                                                                   "u: urinate",
-                                                                                                                   "the big x in the top right if you\'re on windows: win game",
-                                                                                                                   "clickar buttons: self explanatory"])))]));
+                       var instructions = function ()
+                                          {
+                                            var controls = Graphics.Element.flow(Graphics.Element.down)(A2(List.map,
+                                                                                                           Text.plainText,
+                                                                                                           _J.toList(["spacebar: sip beer",
+                                                                                                                      "g: gulp some beer",
+                                                                                                                      "c: chug beer (slam back a brewski)",
+                                                                                                                      "u: urinate",
+                                                                                                                      "ctrl + w: win game",
+                                                                                                                      "clickar buttons: self explanatory"])));
+                                            return A2(Graphics.Element.flow,
+                                                      Graphics.Element.right,
+                                                      _J.toList([A3(Graphics.Element.container,
+                                                                    100,
+                                                                    Graphics.Element.heightOf(controls),
+                                                                    Graphics.Element.middle)(Text.plainText("controls: ")),
+                                                                 controls]));
+                                          }();
                        var $ = Graphics.Input.button("order more beer"),
                            orderButton = $._0,
                            orderClicks = $._1;
                        var $ = Graphics.Input.button("urinate"),
                            urinateButton = $._0,
                            urinateClicks = $._1;
+                       var $ = Graphics.Input.button("gulp down some beer"),
+                           gulpButton = $._0,
+                           gulpClicks = $._1;
                        var $ = Graphics.Input.button("sip your beer"),
                            sipButton = $._0,
                            sipClicks = $._1;
@@ -528,10 +549,10 @@ Elm.Interface.make = function (_elm)
                                                                                                                                          _J.toList([Text.plainText("u been at the bar for: "),
                                                                                                                                                     Text.plainText(timeDisplay(state.elapsed))])),
                                                                                                                                       urinateButton])))]));}
-                                                  _E.Case($moduleName,"between lines 48 and 59");
+                                                  _E.Case($moduleName,"between lines 52 and 63");
                                                 }();
                                        });
-                       _elm.Interface.values = {_op: _op, makeButtons: makeButtons, keyPressed: keyPressed, box: box, timeAcceleration: timeAcceleration, timeAccelerationButtons: timeAccelerationButtons, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, timeFactor: timeFactor, instructions: instructions, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
+                       _elm.Interface.values = {_op: _op, makeButtons: makeButtons, keyPressed: keyPressed, box: box, timeAcceleration: timeAcceleration, timeAccelerationButtons: timeAccelerationButtons, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, gulpButton: gulpButton, gulpClicks: gulpClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, timeFactor: timeFactor, instructions: instructions, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
                        return _elm.Interface.values;
                      };Elm.Constants = Elm.Constants || {};
 Elm.Constants.make = function (_elm)
@@ -562,7 +583,7 @@ Elm.Constants.make = function (_elm)
                        var Time = Elm.Time.make(_elm);
                        var _op = {};
                        var urinationRate = 10 * 3600;
-                       var sipRate = 10 * 3600;
+                       var sipRate = 5 * 3600;
                        var gulpRate = 25 * 3600;
                        var absorptionRate = 40;
                        var ethanolDensity = 0.789;
@@ -705,9 +726,9 @@ Elm.Model.make = function (_elm)
                                         {
                                           return {_: {}, state: b, time: c, windowSize: a};
                                         });
-                   var Timing = F4(function (a,b,c,d)
+                   var Timing = F5(function (a,b,c,d,e)
                                    {
-                                     return {_: {}, beerClicks: a, sipPress: d, timeStep: c, urineClicks: b};
+                                     return {_: {}, beerClicks: a, gulpPress: e, sipPress: d, timeStep: c, urineClicks: b};
                                    });
                    var Score = F2(function (a,b)
                                   {
