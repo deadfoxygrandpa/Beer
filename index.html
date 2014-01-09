@@ -249,7 +249,7 @@ Elm.Update.make = function (_elm)
                                                 var m = mr * timeStep;
                                                 var metabolized = _U.cmp(m,
                                                                          person.bac) > 0 ? person.bac : m;
-                                                var urine = 10 * A2(drank,person,metabolized);
+                                                var urine = 12 * A2(drank,person,metabolized);
                                                 return _U.replace([["bac",
                                                                     A2(Basics.clamp,
                                                                        0,
