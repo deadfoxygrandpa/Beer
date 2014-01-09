@@ -12,6 +12,7 @@ Elm.Main.make = function (_elm)
                       _J = _N.JavaScript.make(_elm),
                       $moduleName = "Main";
                   var Basics = Elm.Basics.make(_elm);
+                  var BeerList = Elm.BeerList.make(_elm);
                   var Color = Elm.Color.make(_elm);
                   var Constants = Elm.Constants.make(_elm);
                   var Graphics = Graphics || {};
@@ -32,12 +33,7 @@ Elm.Main.make = function (_elm)
                   var Update = Elm.Update.make(_elm);
                   var Window = Elm.Window.make(_elm);
                   var _op = {};
-                  var badBeer = A5(Model.Beer,
-                                   "Budweiser",
-                                   "Anheuser-Busch InBev",
-                                   "Pale Lager",
-                                   5,
-                                   A2(Model.Score,0,3));
+                  var badBeer = BeerList.budweiser;
                   var initialPerson = A8(Model.Person,
                                          Model.Male,
                                          0,
@@ -76,7 +72,56 @@ Elm.Main.make = function (_elm)
                                 Window.dimensions);
                   _elm.Main.values = {_op: _op, badBeer: badBeer, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
                   return _elm.Main.values;
-                };Elm.Update = Elm.Update || {};
+                };Elm.BeerList = Elm.BeerList || {};
+Elm.BeerList.make = function (_elm)
+                    {
+                      _elm.BeerList = _elm.BeerList || {};
+                      if (_elm.BeerList.values)
+                      return _elm.BeerList.values;
+                      var _N = Elm.Native,
+                          _U = _N.Utils.make(_elm),
+                          _L = _N.List.make(_elm),
+                          _E = _N.Error.make(_elm),
+                          _J = _N.JavaScript.make(_elm),
+                          $moduleName = "BeerList";
+                      var Basics = Elm.Basics.make(_elm);
+                      var Color = Elm.Color.make(_elm);
+                      var Graphics = Graphics || {};
+                      Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                      var Graphics = Graphics || {};
+                      Graphics.Element = Elm.Graphics.Element.make(_elm);
+                      var List = Elm.List.make(_elm);
+                      var Maybe = Elm.Maybe.make(_elm);
+                      var Model = Elm.Model.make(_elm);
+                      var Native = Native || {};
+                      Native.Ports = Elm.Native.Ports.make(_elm);
+                      var Prelude = Elm.Prelude.make(_elm);
+                      var Signal = Elm.Signal.make(_elm);
+                      var String = Elm.String.make(_elm);
+                      var Text = Elm.Text.make(_elm);
+                      var Time = Elm.Time.make(_elm);
+                      var _op = {};
+                      var londonPride = A5(Model.Beer,
+                                           "London Pride",
+                                           "Fuller\'s",
+                                           Model.PremiumBitter,
+                                           4.7,
+                                           A2(Model.Score,87,97));
+                      var carlsberg = A5(Model.Beer,
+                                         "Carlsberg Lager",
+                                         "Carlsberg Brewery",
+                                         Model.PaleLager,
+                                         4.6,
+                                         A2(Model.Score,8,69));
+                      var budweiser = A5(Model.Beer,
+                                         "Budweiser",
+                                         "Anheuser-Busch InBev",
+                                         Model.PaleLager,
+                                         5,
+                                         A2(Model.Score,0,3));
+                      _elm.BeerList.values = {_op: _op, budweiser: budweiser, carlsberg: carlsberg, londonPride: londonPride};
+                      return _elm.BeerList.values;
+                    };Elm.Update = Elm.Update || {};
 Elm.Update.make = function (_elm)
                   {
                     _elm.Update = _elm.Update || {};
@@ -466,9 +511,11 @@ Elm.Model.make = function (_elm)
                                   {
                                     return {_: {}, drinks: c, elapsed: e, oldBeerClicks: b, oldUrineClicks: d, person: a};
                                   });
+                   var PremiumBitter = {ctor: "PremiumBitter"};
+                   var PaleLager = {ctor: "PaleLager"};
                    var Female = {ctor: "Female"};
                    var Male = {ctor: "Male"};
-                   _elm.Model.values = {_op: _op, Male: Male, Female: Female, State: State, Person: Person, Beer: Beer, Score: Score, Timing: Timing, Environment: Environment};
+                   _elm.Model.values = {_op: _op, Male: Male, Female: Female, PaleLager: PaleLager, PremiumBitter: PremiumBitter, State: State, Person: Person, Beer: Beer, Score: Score, Timing: Timing, Environment: Environment};
                    return _elm.Model.values;
                  };Elm.SpecialEffects = Elm.SpecialEffects || {};
 Elm.SpecialEffects.make = function (_elm)
