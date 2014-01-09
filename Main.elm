@@ -8,9 +8,10 @@ import Interface
 import Model
 import Update
 import Constants
+import BeerList
 
 badBeer : Model.Beer
-badBeer = Model.Beer "Budweiser" "Anheuser-Busch InBev" "Pale Lager" 5 (Model.Score 0 3)
+badBeer = BeerList.budweiser
 
 initialPerson : Model.Person
 initialPerson = Model.Person Model.Male 0 10 0 0 False False (1, badBeer)
