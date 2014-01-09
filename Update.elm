@@ -64,7 +64,7 @@ process person timeStep =
             newbac = drink (absorbed * 1.19) person
             m = mr * timeStep
             metabolized = if (m > person.bac) then person.bac else m
-            urine = 10 * (drank person metabolized)
+            urine = 12 * (drank person metabolized)
             urinated = if (person.urinating) then Constants.urinationRate * timeStep else 0
             (urinating, wetSelf) = if | person.urine < 10  -> (False, False)
                                       | person.urine > 500 -> (True, True)
