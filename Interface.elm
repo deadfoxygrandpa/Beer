@@ -4,24 +4,50 @@ module Interface where
 import Graphics.Input as Input
 import String
 import Window
+import Char
+import Keyboard
 
 -- Project imports
 import SpecialEffects
 import Model
 import Constants
 
+makeButtons : String -> (Int, Int) -> [String] -> ([Element], Signal String)
+makeButtons initial dimensions names =
+    let pool = Input.customButtons initial
+    in ( map (\s -> pool.customButton s (box s dimensions white) (box s dimensions lightGrey) (box s dimensions grey)) names
+       , pool.events)
+
+keyPressed : Char -> Signal ()
+keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))    
+
+box s (w, h) c = color black . container w h middle 
+               . color c . container (w-2) (h-2) middle <| plainText s    
+
+(timeAccelerationButtons, timeAcceleration) = makeButtons "1" (40, 30) ["1", "2", "60", "600"]
+
 (chugButton, chugClicks) = Input.button "slam back a brewski"
 (sipButton, sipClicks) = Input.button "sip your beer"
 (urinateButton, urinateClicks) = Input.button "urinate"
 (orderButton, orderClicks) = Input.button "order more beer"
-(picker, timeAcceleration) = Input.stringDropDown <| map show [1..1000]
+--(picker, timeAcceleration) = Input.stringDropDown <| map show [1..1000]
 
 timeFactor = (\x -> inHours (1000 * (maybe 1 id <| String.toFloat x) / Constants.framerate)) <~ timeAcceleration
 
-render : Int -> Int -> Model.State -> Element -> (Int, Int) -> Element
-render x y state picka (w, h) = flow outward [plainText "Controls: to sip beer, hold the space bar",
-    SpecialEffects.plain (Model.Environment (w, h) state (toFloat x)) <|
-    flow down [ flow right [chugButton, plainText " time acceleration: ", picka]
+instructions : Element
+instructions = flow right [ container 100 50 middle <| plainText "controls: "
+                          , flow down <| map plainText [ "spacebar: sip beer"
+                                                       , "c: chug beer (slam back a brewski)"
+                                                       , "u: urinate"
+                                                       , "the big x in the top right if you're on windows: win game"
+                                                       , "clickar buttons: self explanatory" 
+                                                       ]
+                          ]
+
+render : Int -> Model.State -> (Int, Int) -> Element
+render x state (w, h) = flow outward [instructions,
+    SpecialEffects.theBest (Model.Environment (w, h) state (toFloat x)) <|
+    flow down [ flow right [chugButton, plainText " time acceleration: ", flow right timeAccelerationButtons]
               , flow right [plainText "you are an ", plainText . show <| state.person.weight, plainText "kg ", plainText . show <| state.person.sex]
               , flow right [plainText "your current beer of choice is ", plainText . show <| (snd state.person.beers).name]
               , flow right [plainText "you got ", plainText . String.left 4 . show <| state.person.alc, plainText " grams of unabsorbed ethanol in ur belly"]

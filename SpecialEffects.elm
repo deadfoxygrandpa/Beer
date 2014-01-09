@@ -1,4 +1,4 @@
-module SpecialEffects (distort, plain, fuzzy) where
+module SpecialEffects (distort, plain, fuzzy, theBest) where
 
 -- Standard Library imports
 import Transform2D
@@ -23,7 +23,7 @@ distort environment element =
         x = environment.time
         y = environment.time
     in collage w h <|
-    [ groupTransform (trans (sx * (sin <| x/60)) ((0.95 + (0.5 * (sin <| sy * y/10))))) [toForm element] ]
+    [ groupTransform (trans (sx * (sin <| x/60)) ((0.95 + (0.5 * (sin <| sy * y/50))))) [toForm element] ]
 
 plain : Model.SpecialEffect
 plain environment element =
@@ -33,8 +33,12 @@ plain environment element =
 fuzzy : Model.SpecialEffect
 fuzzy environment element = 
     let form = toForm element
+        (w, h) = environment.windowSize
         t = environment.time
         bac = environment.state.person.bac
         x = 50 * bac * (sin <| t / 15)
         y = 20 * bac * (cos <| t / 10)
-    in collage 500 500 [ alpha 0.7 . move (-x, y) <| form, alpha 0.7 . move (x, y) <| form ] 
+    in collage w h [ alpha 0.7 . move (-x, y) <| form, alpha 0.7 . move (x, y) <| form ] 
+
+theBest : Model.SpecialEffect
+theBest environment = distort environment . fuzzy environment

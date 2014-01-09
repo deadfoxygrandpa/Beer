@@ -1,6 +1,6 @@
 module Constants where
 
-framerate = 30
+framerate = 10
 
 -- grams per millileter
 ethanolDensity = 0.789

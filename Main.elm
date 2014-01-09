@@ -11,6 +11,9 @@ import Update
 import Constants
 import BeerList
 
+frames : Signal Time
+frames = fps Constants.framerate
+
 badBeer : Model.Beer
 badBeer = BeerList.budweiser
 
@@ -23,17 +26,15 @@ initialState = Model.State initialPerson 0 0 0 0
 stateSignal : Signal Model.State
 stateSignal = foldp Update.updateState 
                     initialState
-                    ( sampleOn (fps Constants.framerate) 
-                        ( (\x y z s -> Model.Timing x y z s) <~ (count Interface.chugClicks) 
-                                                              ~ (count Interface.urinateClicks)
+                    ( sampleOn frames
+                        ( (\x y z s -> Model.Timing x y z s) <~ (count <| merge Interface.chugClicks (Interface.keyPressed 'C')) 
+                                                              ~ (count <| merge Interface.urinateClicks (Interface.keyPressed 'U'))
                                                               ~ Interface.timeFactor
                                                               ~ Keyboard.space
                         )
                     )
 
 main : Signal Element
-main = Interface.render <~ (count (fps 52)) 
-                         ~ (count (fps 43)) 
+main = Interface.render <~ (count frames) 
                          ~ stateSignal 
-                         ~ Interface.picker 
                          ~ Window.dimensions
