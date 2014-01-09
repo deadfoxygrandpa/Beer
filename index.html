@@ -1,4 +1,3 @@
-
 <!DOCTYPE HTML>
 <html><head><meta charset="UTF-8"><title>Main</title><script type="text/javascript" src="elm-runtime.js"></script><script type="text/javascript">Elm.Main = Elm.Main || {};
 Elm.Main.make = function (_elm)
@@ -60,8 +59,12 @@ Elm.Main.make = function (_elm)
                                                          {
                                                            return A4(Model.Timing,x,y,z,s);
                                                          }),
-                                                      Signal.count(Interface.chugClicks)),
-                                                   Signal.count(Interface.urinateClicks)),
+                                                      Signal.count(A2(Signal.merge,
+                                                                      Interface.chugClicks,
+                                                                      Interface.keyPressed(_U.chr("C"))))),
+                                                   Signal.count(A2(Signal.merge,
+                                                                   Interface.urinateClicks,
+                                                                   Interface.keyPressed(_U.chr("U"))))),
                                                 Interface.timeFactor),
                                              Keyboard.space)));
                   var main = A2(Signal._op["~"],
@@ -312,6 +315,7 @@ Elm.Interface.make = function (_elm)
                            _J = _N.JavaScript.make(_elm),
                            $moduleName = "Interface";
                        var Basics = Elm.Basics.make(_elm);
+                       var Char = Elm.Char.make(_elm);
                        var Color = Elm.Color.make(_elm);
                        var Constants = Elm.Constants.make(_elm);
                        var Graphics = Graphics || {};
@@ -320,6 +324,7 @@ Elm.Interface.make = function (_elm)
                        Graphics.Element = Elm.Graphics.Element.make(_elm);
                        var Graphics = Graphics || {};
                        Graphics.Input = Elm.Graphics.Input.make(_elm);
+                       var Keyboard = Elm.Keyboard.make(_elm);
                        var List = Elm.List.make(_elm);
                        var Maybe = Elm.Maybe.make(_elm);
                        var Model = Elm.Model.make(_elm);
@@ -369,6 +374,19 @@ Elm.Interface.make = function (_elm)
                                                                                                       Prelude.show(seconds))))));
                                                   }();
                                          };
+                       var instructions = A2(Graphics.Element.flow,
+                                             Graphics.Element.right,
+                                             _J.toList([A3(Graphics.Element.container,
+                                                           100,
+                                                           50,
+                                                           Graphics.Element.middle)(Text.plainText("controls: ")),
+                                                        Graphics.Element.flow(Graphics.Element.down)(A2(List.map,
+                                                                                                        Text.plainText,
+                                                                                                        _J.toList(["spacebar: sip beer",
+                                                                                                                   "c: chug beer (slam back a brewski)",
+                                                                                                                   "u: urinate",
+                                                                                                                   "the big x in the top right if you\'re on windows: win game",
+                                                                                                                   "clickar buttons: self explanatory"])))]));
                        var $ = Graphics.Input.button("order more beer"),
                            orderButton = $._0,
                            orderClicks = $._1;
@@ -395,9 +413,26 @@ Elm.Interface.make = function (_elm)
                                                                                                                                                       _v0._0 - 2,
                                                                                                                                                       _v0._1 - 2,
                                                                                                                                                       Graphics.Element.middle)(Text.plainText(s)))));}
-                                               _E.Case($moduleName,"between lines 19 and 20");
+                                               _E.Case($moduleName,"between lines 24 and 25");
                                              }();
                                     });
+                       var keyPressed = function ($char)
+                                        {
+                                          return A2(Signal._op["<~"],
+                                                    function (_v4)
+                                                    {
+                                                      return function ()
+                                                             {
+                                                               return {ctor: "_Tuple0"};
+                                                             }();
+                                                    },
+                                                    Signal.dropRepeats(A2(Signal._op["<~"],
+                                                                          function (n)
+                                                                          {
+                                                                            return n / 2 | 0;
+                                                                          },
+                                                                          Signal.count(Keyboard.isDown(Char.toCode($char))))));
+                                        };
                        var makeButtons = F3(function (initial,dimensions,names)
                                             {
                                               return function ()
@@ -438,18 +473,18 @@ Elm.Interface.make = function (_elm)
                                                                            Basics.id)(String.toFloat(x)) / Constants.framerate);
                                            },
                                            timeAcceleration);
-                       var render = F3(function (x,state,_v4)
+                       var render = F3(function (x,state,_v6)
                                        {
                                          return function ()
                                                 {
-                                                  switch (_v4.ctor)
+                                                  switch (_v6.ctor)
                                                   {case
                                                    "_Tuple2" :
                                                      return A2(Graphics.Element.flow,
                                                                Graphics.Element.outward,
-                                                               _J.toList([Text.plainText("Controls: to sip beer, hold the space bar"),
+                                                               _J.toList([instructions,
                                                                           SpecialEffects.theBest(A3(Model.Environment,
-                                                                                                    {ctor: "_Tuple2", _0: _v4._0, _1: _v4._1},
+                                                                                                    {ctor: "_Tuple2", _0: _v6._0, _1: _v6._1},
                                                                                                     state,
                                                                                                     Basics.toFloat(x)))(A2(Graphics.Element.flow,
                                                                                                                            Graphics.Element.down,
@@ -493,10 +528,10 @@ Elm.Interface.make = function (_elm)
                                                                                                                                          _J.toList([Text.plainText("u been at the bar for: "),
                                                                                                                                                     Text.plainText(timeDisplay(state.elapsed))])),
                                                                                                                                       urinateButton])))]));}
-                                                  _E.Case($moduleName,"between lines 33 and 44");
+                                                  _E.Case($moduleName,"between lines 48 and 59");
                                                 }();
                                        });
-                       _elm.Interface.values = {_op: _op, makeButtons: makeButtons, box: box, timeAcceleration: timeAcceleration, timeAccelerationButtons: timeAccelerationButtons, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, timeFactor: timeFactor, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
+                       _elm.Interface.values = {_op: _op, makeButtons: makeButtons, keyPressed: keyPressed, box: box, timeAcceleration: timeAcceleration, timeAccelerationButtons: timeAccelerationButtons, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, timeFactor: timeFactor, instructions: instructions, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
                        return _elm.Interface.values;
                      };Elm.Constants = Elm.Constants || {};
 Elm.Constants.make = function (_elm)
@@ -531,7 +566,7 @@ Elm.Constants.make = function (_elm)
                        var gulpRate = 25 * 3600;
                        var absorptionRate = 40;
                        var ethanolDensity = 0.789;
-                       var framerate = 30;
+                       var framerate = 10;
                        _elm.Constants.values = {_op: _op, framerate: framerate, ethanolDensity: ethanolDensity, absorptionRate: absorptionRate, gulpRate: gulpRate, sipRate: sipRate, urinationRate: urinationRate};
                        return _elm.Constants.values;
                      };Elm.SpecialEffects = Elm.SpecialEffects || {};
