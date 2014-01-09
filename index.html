@@ -46,11 +46,12 @@ Elm.Main.make = function (_elm)
                                          false,
                                          {ctor: "_Tuple2", _0: 1, _1: badBeer});
                   var initialState = A5(Model.State,initialPerson,0,0,0,0);
+                  var frames = Time.fps(Constants.framerate);
                   var stateSignal = A3(Signal.foldp,
                                        Update.updateState,
                                        initialState,
                                        A2(Signal.sampleOn,
-                                          Time.fps(Constants.framerate),
+                                          frames,
                                           A2(Signal._op["~"],
                                              A2(Signal._op["~"],
                                                 A2(Signal._op["~"],
@@ -65,14 +66,10 @@ Elm.Main.make = function (_elm)
                                              Keyboard.space)));
                   var main = A2(Signal._op["~"],
                                 A2(Signal._op["~"],
-                                   A2(Signal._op["~"],
-                                      A2(Signal._op["<~"],
-                                         Interface.render,
-                                         Signal.count(Time.fps(52))),
-                                      Signal.count(Time.fps(43))),
+                                   A2(Signal._op["<~"],Interface.render,Signal.count(frames)),
                                    stateSignal),
                                 Window.dimensions);
-                  _elm.Main.values = {_op: _op, badBeer: badBeer, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
+                  _elm.Main.values = {_op: _op, frames: frames, badBeer: badBeer, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
                   return _elm.Main.values;
                 };Elm.BeerList = Elm.BeerList || {};
 Elm.BeerList.make = function (_elm)
@@ -384,24 +381,55 @@ Elm.Interface.make = function (_elm)
                        var $ = Graphics.Input.button("slam back a brewski"),
                            chugButton = $._0,
                            chugClicks = $._1;
-                       var makeButtons = F2(function (initial,names)
+                       var box = F3(function (s,_v0,c)
+                                    {
+                                      return function ()
+                                             {
+                                               switch (_v0.ctor)
+                                               {case
+                                                "_Tuple2" :
+                                                  return Graphics.Element.color(Color.black)(A3(Graphics.Element.container,
+                                                                                                _v0._0,
+                                                                                                _v0._1,
+                                                                                                Graphics.Element.middle)(Graphics.Element.color(c)(A3(Graphics.Element.container,
+                                                                                                                                                      _v0._0 - 2,
+                                                                                                                                                      _v0._1 - 2,
+                                                                                                                                                      Graphics.Element.middle)(Text.plainText(s)))));}
+                                               _E.Case($moduleName,"between lines 19 and 20");
+                                             }();
+                                    });
+                       var makeButtons = F3(function (initial,dimensions,names)
                                             {
                                               return function ()
                                                      {
-                                                       var pool = Graphics.Input.buttons(initial);
-                                                       return {ctor: "_Tuple2", _0: pool.events, _1: A2(List.map,
-                                                                                                        function (s)
-                                                                                                        {
-                                                                                                          return A2(pool.button,
-                                                                                                                    s,
-                                                                                                                    s);
-                                                                                                        },
-                                                                                                        names)};
+                                                       var pool = Graphics.Input.customButtons(initial);
+                                                       return {ctor: "_Tuple2", _0: A2(List.map,
+                                                                                       function (s)
+                                                                                       {
+                                                                                         return A4(pool.customButton,
+                                                                                                   s,
+                                                                                                   A3(box,
+                                                                                                      s,
+                                                                                                      dimensions,
+                                                                                                      Color.white),
+                                                                                                   A3(box,
+                                                                                                      s,
+                                                                                                      dimensions,
+                                                                                                      Color.lightGrey),
+                                                                                                   A3(box,
+                                                                                                      s,
+                                                                                                      dimensions,
+                                                                                                      Color.grey));
+                                                                                       },
+                                                                                       names), _1: pool.events};
                                                      }();
                                             });
-                       var $ = A2(makeButtons,"1",_J.toList(["1","60","600"])),
-                           timeAcceleration = $._0,
-                           timeAccelerationButtons = $._1;
+                       var $ = A3(makeButtons,
+                                  "1",
+                                  {ctor: "_Tuple2", _0: 40, _1: 30},
+                                  _J.toList(["1","2","60","600"])),
+                           timeAccelerationButtons = $._0,
+                           timeAcceleration = $._1;
                        var timeFactor = A2(Signal._op["<~"],
                                            function (x)
                                            {
@@ -410,65 +438,65 @@ Elm.Interface.make = function (_elm)
                                                                            Basics.id)(String.toFloat(x)) / Constants.framerate);
                                            },
                                            timeAcceleration);
-                       var render = F4(function (x,y,state,_v0)
+                       var render = F3(function (x,state,_v4)
                                        {
                                          return function ()
                                                 {
-                                                  switch (_v0.ctor)
+                                                  switch (_v4.ctor)
                                                   {case
                                                    "_Tuple2" :
                                                      return A2(Graphics.Element.flow,
                                                                Graphics.Element.outward,
                                                                _J.toList([Text.plainText("Controls: to sip beer, hold the space bar"),
-                                                                          SpecialEffects.fuzzy(A3(Model.Environment,
-                                                                                                  {ctor: "_Tuple2", _0: _v0._0, _1: _v0._1},
-                                                                                                  state,
-                                                                                                  Basics.toFloat(x)))(A2(Graphics.Element.flow,
-                                                                                                                         Graphics.Element.down,
-                                                                                                                         _J.toList([A2(Graphics.Element.flow,
-                                                                                                                                       Graphics.Element.right,
-                                                                                                                                       _J.toList([chugButton,
-                                                                                                                                                  Text.plainText(" time acceleration: "),
-                                                                                                                                                  A2(Graphics.Element.flow,
-                                                                                                                                                     Graphics.Element.right,
-                                                                                                                                                     timeAccelerationButtons)])),
-                                                                                                                                    A2(Graphics.Element.flow,
-                                                                                                                                       Graphics.Element.right,
-                                                                                                                                       _J.toList([Text.plainText("you are an "),
-                                                                                                                                                  Text.plainText(Prelude.show(state.person.weight)),
-                                                                                                                                                  Text.plainText("kg "),
-                                                                                                                                                  Text.plainText(Prelude.show(state.person.sex))])),
-                                                                                                                                    A2(Graphics.Element.flow,
-                                                                                                                                       Graphics.Element.right,
-                                                                                                                                       _J.toList([Text.plainText("your current beer of choice is "),
-                                                                                                                                                  Text.plainText(Prelude.show(Basics.snd(state.person.beers).name))])),
-                                                                                                                                    A2(Graphics.Element.flow,
-                                                                                                                                       Graphics.Element.right,
-                                                                                                                                       _J.toList([Text.plainText("you got "),
-                                                                                                                                                  Text.plainText(String.left(4)(Prelude.show(state.person.alc))),
-                                                                                                                                                  Text.plainText(" grams of unabsorbed ethanol in ur belly")])),
-                                                                                                                                    A2(Graphics.Element.flow,
-                                                                                                                                       Graphics.Element.right,
-                                                                                                                                       _J.toList([Text.plainText("ur bac is: "),
-                                                                                                                                                  Text.plainText(String.left(6)(Prelude.show(state.person.bac)))])),
-                                                                                                                                    Text.plainText(_L.append(A2(peeDisplay,
-                                                                                                                                                                state.person.urine,
-                                                                                                                                                                state.person.wetSelf),
-                                                                                                                                                             state.person.urinating ? " (you are peeing)" : "")),
-                                                                                                                                    A2(Graphics.Element.flow,
-                                                                                                                                       Graphics.Element.right,
-                                                                                                                                       _J.toList([Text.plainText("you\'ve had "),
-                                                                                                                                                  Text.plainText(Prelude.show(state.drinks)),
-                                                                                                                                                  Text.plainText(" beers")])),
-                                                                                                                                    A2(Graphics.Element.flow,
-                                                                                                                                       Graphics.Element.right,
-                                                                                                                                       _J.toList([Text.plainText("u been at the bar for: "),
-                                                                                                                                                  Text.plainText(timeDisplay(state.elapsed))])),
-                                                                                                                                    urinateButton])))]));}
-                                                  _E.Case($moduleName,"between lines 29 and 40");
+                                                                          SpecialEffects.theBest(A3(Model.Environment,
+                                                                                                    {ctor: "_Tuple2", _0: _v4._0, _1: _v4._1},
+                                                                                                    state,
+                                                                                                    Basics.toFloat(x)))(A2(Graphics.Element.flow,
+                                                                                                                           Graphics.Element.down,
+                                                                                                                           _J.toList([A2(Graphics.Element.flow,
+                                                                                                                                         Graphics.Element.right,
+                                                                                                                                         _J.toList([chugButton,
+                                                                                                                                                    Text.plainText(" time acceleration: "),
+                                                                                                                                                    A2(Graphics.Element.flow,
+                                                                                                                                                       Graphics.Element.right,
+                                                                                                                                                       timeAccelerationButtons)])),
+                                                                                                                                      A2(Graphics.Element.flow,
+                                                                                                                                         Graphics.Element.right,
+                                                                                                                                         _J.toList([Text.plainText("you are an "),
+                                                                                                                                                    Text.plainText(Prelude.show(state.person.weight)),
+                                                                                                                                                    Text.plainText("kg "),
+                                                                                                                                                    Text.plainText(Prelude.show(state.person.sex))])),
+                                                                                                                                      A2(Graphics.Element.flow,
+                                                                                                                                         Graphics.Element.right,
+                                                                                                                                         _J.toList([Text.plainText("your current beer of choice is "),
+                                                                                                                                                    Text.plainText(Prelude.show(Basics.snd(state.person.beers).name))])),
+                                                                                                                                      A2(Graphics.Element.flow,
+                                                                                                                                         Graphics.Element.right,
+                                                                                                                                         _J.toList([Text.plainText("you got "),
+                                                                                                                                                    Text.plainText(String.left(4)(Prelude.show(state.person.alc))),
+                                                                                                                                                    Text.plainText(" grams of unabsorbed ethanol in ur belly")])),
+                                                                                                                                      A2(Graphics.Element.flow,
+                                                                                                                                         Graphics.Element.right,
+                                                                                                                                         _J.toList([Text.plainText("ur bac is: "),
+                                                                                                                                                    Text.plainText(String.left(6)(Prelude.show(state.person.bac)))])),
+                                                                                                                                      Text.plainText(_L.append(A2(peeDisplay,
+                                                                                                                                                                  state.person.urine,
+                                                                                                                                                                  state.person.wetSelf),
+                                                                                                                                                               state.person.urinating ? " (you are peeing)" : "")),
+                                                                                                                                      A2(Graphics.Element.flow,
+                                                                                                                                         Graphics.Element.right,
+                                                                                                                                         _J.toList([Text.plainText("you\'ve had "),
+                                                                                                                                                    Text.plainText(Prelude.show(state.drinks)),
+                                                                                                                                                    Text.plainText(" beers")])),
+                                                                                                                                      A2(Graphics.Element.flow,
+                                                                                                                                         Graphics.Element.right,
+                                                                                                                                         _J.toList([Text.plainText("u been at the bar for: "),
+                                                                                                                                                    Text.plainText(timeDisplay(state.elapsed))])),
+                                                                                                                                      urinateButton])))]));}
+                                                  _E.Case($moduleName,"between lines 33 and 44");
                                                 }();
                                        });
-                       _elm.Interface.values = {_op: _op, makeButtons: makeButtons, timeAcceleration: timeAcceleration, timeAccelerationButtons: timeAccelerationButtons, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, timeFactor: timeFactor, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
+                       _elm.Interface.values = {_op: _op, makeButtons: makeButtons, box: box, timeAcceleration: timeAcceleration, timeAccelerationButtons: timeAccelerationButtons, chugButton: chugButton, chugClicks: chugClicks, sipButton: sipButton, sipClicks: sipClicks, urinateButton: urinateButton, urinateClicks: urinateClicks, orderButton: orderButton, orderClicks: orderClicks, timeFactor: timeFactor, render: render, timeDisplay: timeDisplay, peeDisplay: peeDisplay};
                        return _elm.Interface.values;
                      };Elm.Constants = Elm.Constants || {};
 Elm.Constants.make = function (_elm)
@@ -597,11 +625,18 @@ Elm.SpecialEffects.make = function (_elm)
                                                                   h)(_J.toList([A2(Graphics.Collage.groupTransform,
                                                                                    A2(trans,
                                                                                       sx * Basics.sin(x / 60),
-                                                                                      0.95 + 0.5 * Basics.sin(sy * y / 10)),
+                                                                                      0.95 + 0.5 * Basics.sin(sy * y / 50)),
                                                                                    _J.toList([Graphics.Collage.toForm(element)]))]));
                                                       }();
                                              });
-                            _elm.SpecialEffects.values = {_op: _op, distort: distort, plain: plain, fuzzy: fuzzy};
+                            var theBest = function (environment)
+                                          {
+                                            return function ($)
+                                                   {
+                                                     return distort(environment)(fuzzy(environment)($));
+                                                   };
+                                          };
+                            _elm.SpecialEffects.values = {_op: _op, distort: distort, plain: plain, fuzzy: fuzzy, theBest: theBest};
                             return _elm.SpecialEffects.values;
                           };Elm.Model = Elm.Model || {};
 Elm.Model.make = function (_elm)
