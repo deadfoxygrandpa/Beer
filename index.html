@@ -622,14 +622,20 @@ Elm.SpecialEffects.make = function (_elm)
                             var Time = Elm.Time.make(_elm);
                             var Transform2D = Elm.Transform2D.make(_elm);
                             var _op = {};
+                            var drunkFactor = function (bac)
+                                              {
+                                                return Math.pow(bac,2);
+                                              };
                             var fuzzy = F2(function (environment,element)
                                            {
                                              return function ()
                                                     {
-                                                      var bac = environment.state.person.bac;
+                                                      var factor = A2(Basics.clamp,
+                                                                      0,
+                                                                      100)(environment.state.person.bac - 1.0e-2);
                                                       var t = environment.time;
-                                                      var x = 50 * bac * Basics.sin(t / 15);
-                                                      var y = 20 * bac * Basics.cos(t / 10);
+                                                      var x = 50 * factor * Basics.sin(t / 15);
+                                                      var y = 20 * factor * Basics.cos(t / 10);
                                                       var $ = environment.windowSize,
                                                           w = $._0,
                                                           h = $._1;
@@ -673,8 +679,9 @@ Elm.SpecialEffects.make = function (_elm)
                                                       {
                                                         var y = environment.time;
                                                         var x = environment.time;
-                                                        var sy = environment.state.person.bac;
-                                                        var sx = environment.state.person.bac;
+                                                        var factor = drunkFactor(environment.state.person.bac);
+                                                        var sx = factor;
+                                                        var sy = factor * 0.5;
                                                         var $ = environment.windowSize,
                                                             w = $._0,
                                                             h = $._1;
@@ -683,7 +690,7 @@ Elm.SpecialEffects.make = function (_elm)
                                                                   h)(_J.toList([A2(Graphics.Collage.groupTransform,
                                                                                    A2(trans,
                                                                                       sx * Basics.sin(x / 60),
-                                                                                      0.95 + 0.5 * Basics.sin(sy * y / 50)),
+                                                                                      0.95 + sy * Basics.sin(y / 50)),
                                                                                    _J.toList([Graphics.Collage.toForm(element)]))]));
                                                       }();
                                              });
