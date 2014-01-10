@@ -23,7 +23,7 @@ distort environment element =
         x = environment.time
         y = environment.time
     in collage w h <|
-    [ groupTransform (trans (sx * (sin <| x/60)) ((0.95 + (0.5 * (sin <| sy * y/50))))) [toForm element] ]
+    [ groupTransform (trans (sx * (sin <| x/60)) ((0.95 + (0.5 * sy * (sin <| y/50))))) [toForm element] ]
 
 plain : Model.SpecialEffect
 plain environment element =
