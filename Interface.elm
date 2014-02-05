@@ -48,8 +48,8 @@ instructions =
                   , controls
                   ]
 
-render : Int -> Model.State -> (Int, Int) -> Element
-render x state (w, h) = flow outward [instructions,
+render : Int -> Model.State -> (Int, Int) -> Int -> Element
+render x state (w, h) seed = flow outward [instructions, container w h bottomLeft (plainText <| "random seed: " ++ show seed),
     SpecialEffects.theBest (Model.Environment (w, h) state (toFloat x)) <|
     flow down [ flow right [chugButton, plainText " time acceleration: ", flow right timeAccelerationButtons]
               , flow right [plainText "you are an ", plainText . show <| state.person.weight, plainText "kg ", plainText . show <| state.person.sex]

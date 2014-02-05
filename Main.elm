@@ -51,3 +51,4 @@ main : Signal Element
 main = Interface.render <~ (count frames) 
                          ~ stateSignal 
                          ~ Window.dimensions
+                         ~ (constant seed)
