@@ -23,8 +23,10 @@ frames = fps Constants.framerate
 badBeer : Model.Beer
 badBeer = BeerList.tsingtao
 
+port seed : Int
+
 gen : Generator.Generator Generator.Standard.Standard
-gen = Generator.Standard.generator 1
+gen = Generator.Standard.generator seed
 
 initialPerson : Model.Person
 initialPerson = Model.Person Model.Male 0 80 0 0 False False (355, badBeer)
