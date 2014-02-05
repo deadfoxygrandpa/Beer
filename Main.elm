@@ -12,6 +12,18 @@ import Update
 import Constants
 import BeerList
 
+-- Catalog imports
+import Generator
+import Generator.Standard
+
+gen : Generator.Generator Generator.Standard.Standard
+gen = Generator.Standard.generator 1
+
+makePerson : Generator.Generator Generator.Standard.Standard -> (Model.Person, Generator.Generator Generator.Standard.Standard)
+makePerson gen =
+    let (sex, gen') = Generator.int32Range (0, 10) gen
+    in (Model.Person (if (sex <= 0) then Model.Male else Model.Female) 0 (toFloat sex) 0 0 False False (355, badBeer), gen')
+
 frames : Signal Time
 frames = fps Constants.framerate
 
@@ -22,7 +34,7 @@ initialPerson : Model.Person
 initialPerson = Model.Person Model.Male 0 80 0 0 False False (355, badBeer)
 
 initialState : Model.State
-initialState = Model.State initialPerson 0 0 0 0
+initialState = Model.State (fst <| makePerson gen) 0 0 0 0
 
 stateSignal : Signal Model.State
 stateSignal = foldp Update.updateState 
