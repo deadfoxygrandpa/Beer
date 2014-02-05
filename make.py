@@ -1,5 +1,5 @@
 import subprocess
-import fileinput
+import os
 
 if __name__ == '__main__':
 	s = subprocess.check_output(['elm', '--make', '--runtime=elm-runtime.js', 'Main.elm'])
@@ -8,7 +8,7 @@ if __name__ == '__main__':
 	if s.endswith('Generating HTML ... Done\r\n'):
 		print('Inserting random seed port...')
 
-		path = r'build\Main.html'
+		path = os.path.join('build', 'Main.html')
 
 		with open(path, 'r') as f:
 			data = f.read()
