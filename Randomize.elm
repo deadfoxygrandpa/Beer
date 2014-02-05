@@ -17,7 +17,6 @@ bool gen =
                         otherwise -> True
     in (int2Bool x, gen')
 
-
 normal : Generator.Generator g -> (Float, Generator.Generator g)
 normal gen =
     let makeXY gen = let (x, gen')  = Generator.floatRange (-1, 1) gen
@@ -28,11 +27,18 @@ normal gen =
         n = x * (sqrt <| (-2 * (logBase e s)) / s)
     in (n, gen')    
 
+normal' : (Float, Float) -> Generator.Generator g -> (Float, Generator.Generator g)
+normal' (mean, sigma) gen =
+    let (x, gen') = normal gen
+    in (x * sigma + mean, gen')
+
 sex : Generator.Generator g -> (Model.Sex, Generator.Generator g)
 sex gen =
     let (x, gen') = bool gen
         bool2Sex b = if b then Model.Female else Model.Male
     in (bool2Sex x, gen')
+
+
 
 gen : Generator.Generator Generator.Standard.Standard
 gen = Generator.Standard.generator 1
