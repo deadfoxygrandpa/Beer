@@ -8,7 +8,7 @@ import BeerList
 import Generator
 import Generator.Standard
 
-
+-- Basic generator additions
 bool : Generator.Generator g -> (Bool, Generator.Generator g)
 bool gen =
     let (x, gen') = Generator.int32Range (0, 1) gen
@@ -32,22 +32,51 @@ normal' (mean, sigma) gen =
     let (x, gen') = normal gen
     in (x * sigma + mean, gen')
 
+-- Randomized Person fields
 sex : Generator.Generator g -> (Model.Sex, Generator.Generator g)
 sex gen =
     let (x, gen') = bool gen
         bool2Sex b = if b then Model.Female else Model.Male
     in (bool2Sex x, gen')
 
+bac : Generator.Generator g -> (Float, Generator.Generator g)
+bac gen = 
+    let (x, gen') = normal' (0, 0.05) gen
+    in (clamp 0 100 x, gen')
 
+weight : Model.Sex -> Generator.Generator g -> (Float, Generator.Generator g)
+weight sex =
+    let (mean, sigma) = case sex of
+                            Model.Male   -> (75.7, 12.2)
+                            Model.Female -> (64.9, 12.7)
+    in normal' (mean, sigma)
 
+urine : Generator.Generator g -> (Float, Generator.Generator g)
+urine gen = 
+    let (x, gen') = normal' (50, 35) gen
+    in (clamp 0 1000 x, gen')
+
+beer : Generator.Generator g -> (Model.Beer, Generator.Generator g)
+beer gen =
+    let n = length BeerList.allBeers
+        (x, gen') = Generator.int32Range (0, n - 1) gen
+    in (head . drop x <| BeerList.allBeers, gen')
+
+-- Other module-specific stuff
 gen : Generator.Generator Generator.Standard.Standard
 gen = Generator.Standard.generator 1
-
 
 badBeer : Model.Beer
 badBeer = BeerList.tsingtao
 
 makePerson : Generator.Generator Generator.Standard.Standard -> (Model.Person, Generator.Generator Generator.Standard.Standard)
 makePerson gen =
-    let (sex, gen') = Generator.int32Range (0, 10) gen
-    in (Model.Person (if (sex <= 0) then Model.Male else Model.Female) 0 (toFloat sex) 0 0 False False (355, badBeer), gen')
+    let (sex', gen1) = sex gen
+        (bac', gen2) = bac gen1
+        (weight', gen3) = weight sex' gen2
+        alc = 0
+        (urine', gen4) = urine gen3
+        urinating = False
+        wetSelf = False
+        (beer', gen5) = beer gen4
+    in (Model.Person sex' bac' weight' alc urine' urinating wetSelf (355, beer'), gen5)
