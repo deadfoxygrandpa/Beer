@@ -87,9 +87,11 @@ Elm.Main.make = function (_elm)
                                              Keyboard.isDown(Char.toCode(_U.chr("G"))))));
                   var main = A2(Signal._op["~"],
                                 A2(Signal._op["~"],
-                                   A2(Signal._op["<~"],Interface.render,Signal.count(frames)),
-                                   stateSignal),
-                                Window.dimensions);
+                                   A2(Signal._op["~"],
+                                      A2(Signal._op["<~"],Interface.render,Signal.count(frames)),
+                                      stateSignal),
+                                   Window.dimensions),
+                                Signal.constant(seed));
                   _elm.Main.values = {_op: _op, frames: frames, badBeer: badBeer, gen: gen, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
                   return _elm.Main.values;
                 };Elm.Randomize = Elm.Randomize || {};
@@ -727,7 +729,7 @@ Elm.Interface.make = function (_elm)
                                                                            Basics.id)(String.toFloat(x)) / Constants.framerate);
                                            },
                                            timeAcceleration);
-                       var render = F3(function (x,state,_v6)
+                       var render = F4(function (x,state,_v6,seed)
                                        {
                                          return function ()
                                                 {
@@ -737,6 +739,12 @@ Elm.Interface.make = function (_elm)
                                                      return A2(Graphics.Element.flow,
                                                                Graphics.Element.outward,
                                                                _J.toList([instructions,
+                                                                          A4(Graphics.Element.container,
+                                                                             _v6._0,
+                                                                             _v6._1,
+                                                                             Graphics.Element.bottomLeft,
+                                                                             Text.plainText(_L.append("random seed: ",
+                                                                                                      Prelude.show(seed)))),
                                                                           SpecialEffects.theBest(A3(Model.Environment,
                                                                                                     {ctor: "_Tuple2", _0: _v6._0, _1: _v6._1},
                                                                                                     state,
@@ -1259,4 +1267,4 @@ Elm.Model.make = function (_elm)
                    var Male = {ctor: "Male"};
                    _elm.Model.values = {_op: _op, Male: Male, Female: Female, PaleLager: PaleLager, PremiumBitter: PremiumBitter, State: State, Person: Person, Beer: Beer, Score: Score, Timing: Timing, Environment: Environment};
                    return _elm.Model.values;
-                 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main, { seed: Math.floor(Math.random() * (Math.pow(2, 32) + Math.pow(2, 32))) - Math.pow(2, 32)})</script><noscript></noscript></body></html>
+                 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main, { seed: Math.floor(Math.random() * Math.pow(2, 32))})</script><noscript></noscript></body></html>
