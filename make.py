@@ -14,7 +14,7 @@ if __name__ == '__main__':
 			data = f.read()
 
 		new_data = data.replace('Elm.fullscreen(Elm.Main)',
-			'Elm.fullscreen(Elm.Main, { seed: Math.floor(Math.random() * (Math.pow(2, 32) + Math.pow(2, 32))) - Math.pow(2, 32)})')
+			'Elm.fullscreen(Elm.Main, { seed: Math.floor(Math.random() * Math.pow(2, 32))})')
 
 		with open(path, 'w') as f:
 			f.write(new_data)
