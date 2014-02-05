@@ -62,15 +62,8 @@ beer gen =
         (x, gen') = Generator.int32Range (0, n - 1) gen
     in (head . drop x <| BeerList.allBeers, gen')
 
--- Other module-specific stuff
-gen : Generator.Generator Generator.Standard.Standard
-gen = Generator.Standard.generator 1
-
-badBeer : Model.Beer
-badBeer = BeerList.tsingtao
-
-makePerson : Generator.Generator Generator.Standard.Standard -> (Model.Person, Generator.Generator Generator.Standard.Standard)
-makePerson gen =
+person : Generator.Generator Generator.Standard.Standard -> (Model.Person, Generator.Generator Generator.Standard.Standard)
+person gen =
     let (sex', gen1) = sex gen
         (bac', gen2) = bac gen1
         (weight', gen3) = weight sex' gen2
