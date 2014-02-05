@@ -13,17 +13,24 @@ import Constants
 import BeerList
 import Randomize
 
+-- Catalog imports
+import Generator
+import Generator.Standard
+
 frames : Signal Time
 frames = fps Constants.framerate
 
 badBeer : Model.Beer
 badBeer = BeerList.tsingtao
 
+gen : Generator.Generator Generator.Standard.Standard
+gen = Generator.Standard.generator 1
+
 initialPerson : Model.Person
 initialPerson = Model.Person Model.Male 0 80 0 0 False False (355, badBeer)
 
 initialState : Model.State
-initialState = Model.State (fst <| Randomize.makePerson Randomize.gen) 0 0 0 0
+initialState = Model.State (fst <| Randomize.person gen) 0 0 0 0
 
 stateSignal : Signal Model.State
 stateSignal = foldp Update.updateState 
