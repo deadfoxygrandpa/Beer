@@ -16,6 +16,9 @@ Elm.Main.make = function (_elm)
                   var Char = Elm.Char.make(_elm);
                   var Color = Elm.Color.make(_elm);
                   var Constants = Elm.Constants.make(_elm);
+                  var Generator = Elm.Generator.make(_elm);
+                  var Generator = Generator || {};
+                  Generator.Standard = Elm.Generator.Standard.make(_elm);
                   var Graphics = Graphics || {};
                   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
                   var Graphics = Graphics || {};
@@ -28,6 +31,7 @@ Elm.Main.make = function (_elm)
                   var Native = Native || {};
                   Native.Ports = Elm.Native.Ports.make(_elm);
                   var Prelude = Elm.Prelude.make(_elm);
+                  var Randomize = Elm.Randomize.make(_elm);
                   var Signal = Elm.Signal.make(_elm);
                   var String = Elm.String.make(_elm);
                   var Text = Elm.Text.make(_elm);
@@ -35,6 +39,18 @@ Elm.Main.make = function (_elm)
                   var Update = Elm.Update.make(_elm);
                   var Window = Elm.Window.make(_elm);
                   var _op = {};
+                  var seed = Native.Ports.portIn("seed",
+                                                 function (v)
+                                                 {
+                                                   return typeof v === "number" ? _J.toInt(v) : _E.raise("invalid input, expecting JSNumber but got " + v);
+                                                 });
+                  var gen = Generator.Standard.generator(seed);
+                  var initialState = A5(Model.State,
+                                        Basics.fst(Randomize.person(gen)),
+                                        0,
+                                        0,
+                                        0,
+                                        0);
                   var badBeer = BeerList.tsingtao;
                   var initialPerson = A8(Model.Person,
                                          Model.Male,
@@ -45,7 +61,6 @@ Elm.Main.make = function (_elm)
                                          false,
                                          false,
                                          {ctor: "_Tuple2", _0: 355, _1: badBeer});
-                  var initialState = A5(Model.State,initialPerson,0,0,0,0);
                   var frames = Time.fps(Constants.framerate);
                   var stateSignal = A3(Signal.foldp,
                                        Update.updateState,
@@ -75,9 +90,221 @@ Elm.Main.make = function (_elm)
                                    A2(Signal._op["<~"],Interface.render,Signal.count(frames)),
                                    stateSignal),
                                 Window.dimensions);
-                  _elm.Main.values = {_op: _op, frames: frames, badBeer: badBeer, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
+                  _elm.Main.values = {_op: _op, frames: frames, badBeer: badBeer, gen: gen, initialPerson: initialPerson, initialState: initialState, stateSignal: stateSignal, main: main};
                   return _elm.Main.values;
-                };Elm.BeerList = Elm.BeerList || {};
+                };Elm.Randomize = Elm.Randomize || {};
+Elm.Randomize.make = function (_elm)
+                     {
+                       _elm.Randomize = _elm.Randomize || {};
+                       if (_elm.Randomize.values)
+                       return _elm.Randomize.values;
+                       var _N = Elm.Native,
+                           _U = _N.Utils.make(_elm),
+                           _L = _N.List.make(_elm),
+                           _E = _N.Error.make(_elm),
+                           _J = _N.JavaScript.make(_elm),
+                           $moduleName = "Randomize";
+                       var Basics = Elm.Basics.make(_elm);
+                       var BeerList = Elm.BeerList.make(_elm);
+                       var Color = Elm.Color.make(_elm);
+                       var Generator = Elm.Generator.make(_elm);
+                       var Generator = Generator || {};
+                       Generator.Standard = Elm.Generator.Standard.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Element = Elm.Graphics.Element.make(_elm);
+                       var List = Elm.List.make(_elm);
+                       var Maybe = Elm.Maybe.make(_elm);
+                       var Model = Elm.Model.make(_elm);
+                       var Native = Native || {};
+                       Native.Ports = Elm.Native.Ports.make(_elm);
+                       var Prelude = Elm.Prelude.make(_elm);
+                       var Signal = Elm.Signal.make(_elm);
+                       var String = Elm.String.make(_elm);
+                       var Text = Elm.Text.make(_elm);
+                       var Time = Elm.Time.make(_elm);
+                       var _op = {};
+                       var beer = function (gen)
+                                  {
+                                    return function ()
+                                           {
+                                             var n = List.length(BeerList.allBeers);
+                                             var $ = A2(Generator.int32Range,
+                                                        {ctor: "_Tuple2", _0: 0, _1: n - 1},
+                                                        gen),
+                                                 x = $._0,
+                                                 gen$ = $._1;
+                                             return {ctor: "_Tuple2", _0: List.head(List.drop(x)(BeerList.allBeers)), _1: gen$};
+                                           }();
+                                  };
+                       var normal = function (gen)
+                                    {
+                                      return function ()
+                                             {
+                                               var makeXY = function (gen)
+                                                            {
+                                                              return function ()
+                                                                     {
+                                                                       var $ = A2(Generator.floatRange,
+                                                                                  {ctor: "_Tuple2", _0: -1, _1: 1},
+                                                                                  gen),
+                                                                           x = $._0,
+                                                                           gen$ = $._1;
+                                                                       var $ = A2(Generator.floatRange,
+                                                                                  {ctor: "_Tuple2", _0: -1, _1: 1},
+                                                                                  gen$),
+                                                                           y = $._0,
+                                                                           gen$$ = $._1;
+                                                                       var s = Math.pow(x,
+                                                                                        2) + Math.pow(y,
+                                                                                                      2);
+                                                                       return _U.cmp(s,
+                                                                                     1) < 0 ? {ctor: "_Tuple4", _0: x, _1: y, _2: s, _3: gen$$} : makeXY(gen$$);
+                                                                     }();
+                                                            };
+                                               var $ = makeXY(gen),
+                                                   x = $._0,
+                                                   y = $._1,
+                                                   s = $._2,
+                                                   gen$ = $._3;
+                                               var n = x * Basics.sqrt(-2 * A2(Basics.logBase,
+                                                                               Basics.e,
+                                                                               s) / s);
+                                               return {ctor: "_Tuple2", _0: n, _1: gen$};
+                                             }();
+                                    };
+                       var normal$ = F2(function (_v0,gen)
+                                        {
+                                          return function ()
+                                                 {
+                                                   switch (_v0.ctor)
+                                                   {case
+                                                    "_Tuple2" :
+                                                      return function ()
+                                                             {
+                                                               var $ = normal(gen),
+                                                                   x = $._0,
+                                                                   gen$ = $._1;
+                                                               return {ctor: "_Tuple2", _0: x * _v0._1 + _v0._0, _1: gen$};
+                                                             }();}
+                                                   _E.Case($moduleName,"between lines 32 and 33");
+                                                 }();
+                                        });
+                       var bac = function (gen)
+                                 {
+                                   return function ()
+                                          {
+                                            var $ = A2(normal$,
+                                                       {ctor: "_Tuple2", _0: 0, _1: 5.0e-2},
+                                                       gen),
+                                                x = $._0,
+                                                gen$ = $._1;
+                                            return {ctor: "_Tuple2", _0: A3(Basics.clamp,
+                                                                            0,
+                                                                            100,
+                                                                            x), _1: gen$};
+                                          }();
+                                 };
+                       var weight = function (sex)
+                                    {
+                                      return function ()
+                                             {
+                                               var $ = function ()
+                                                       {
+                                                         switch (sex.ctor)
+                                                         {case
+                                                          "Female" :
+                                                            return {ctor: "_Tuple2", _0: 64.9, _1: 12.7};
+                                                          case
+                                                          "Male" :
+                                                            return {ctor: "_Tuple2", _0: 75.7, _1: 12.2};}
+                                                         _E.Case($moduleName,
+                                                                 "between lines 49 and 52");
+                                                       }(),
+                                                   mean = $._0,
+                                                   sigma = $._1;
+                                               return normal$({ctor: "_Tuple2", _0: mean, _1: sigma});
+                                             }();
+                                    };
+                       var urine = function (gen)
+                                   {
+                                     return function ()
+                                            {
+                                              var $ = A2(normal$,
+                                                         {ctor: "_Tuple2", _0: 50, _1: 35},
+                                                         gen),
+                                                  x = $._0,
+                                                  gen$ = $._1;
+                                              return {ctor: "_Tuple2", _0: A3(Basics.clamp,
+                                                                              0,
+                                                                              1000,
+                                                                              x), _1: gen$};
+                                            }();
+                                   };
+                       var bool = function (gen)
+                                  {
+                                    return function ()
+                                           {
+                                             var int2Bool = function (n)
+                                                            {
+                                                              return function ()
+                                                                     {
+                                                                       switch (n)
+                                                                       {case
+                                                                        0 :
+                                                                          return false;}
+                                                                       return true;
+                                                                     }();
+                                                            };
+                                             var $ = A2(Generator.int32Range,
+                                                        {ctor: "_Tuple2", _0: 0, _1: 1},
+                                                        gen),
+                                                 x = $._0,
+                                                 gen$ = $._1;
+                                             return {ctor: "_Tuple2", _0: int2Bool(x), _1: gen$};
+                                           }();
+                                  };
+                       var sex = function (gen)
+                                 {
+                                   return function ()
+                                          {
+                                            var bool2Sex = function (b)
+                                                           {
+                                                             return b ? Model.Female : Model.Male;
+                                                           };
+                                            var $ = bool(gen),x = $._0,gen$ = $._1;
+                                            return {ctor: "_Tuple2", _0: bool2Sex(x), _1: gen$};
+                                          }();
+                                 };
+                       var person = function (gen)
+                                    {
+                                      return function ()
+                                             {
+                                               var wetSelf = false;
+                                               var urinating = false;
+                                               var alc = 0;
+                                               var $ = sex(gen),sex$ = $._0,gen1 = $._1;
+                                               var $ = bac(gen1),bac$ = $._0,gen2 = $._1;
+                                               var $ = A2(weight,sex$,gen2),
+                                                   weight$ = $._0,
+                                                   gen3 = $._1;
+                                               var $ = urine(gen3),urine$ = $._0,gen4 = $._1;
+                                               var $ = beer(gen4),beer$ = $._0,gen5 = $._1;
+                                               return {ctor: "_Tuple2", _0: A8(Model.Person,
+                                                                               sex$,
+                                                                               bac$,
+                                                                               weight$,
+                                                                               alc,
+                                                                               urine$,
+                                                                               urinating,
+                                                                               wetSelf,
+                                                                               {ctor: "_Tuple2", _0: 355, _1: beer$}), _1: gen5};
+                                             }();
+                                    };
+                       _elm.Randomize.values = {_op: _op, bool: bool, normal: normal, normal$: normal$, sex: sex, bac: bac, weight: weight, urine: urine, beer: beer, person: person};
+                       return _elm.Randomize.values;
+                     };Elm.BeerList = Elm.BeerList || {};
 Elm.BeerList.make = function (_elm)
                     {
                       _elm.BeerList = _elm.BeerList || {};
@@ -130,7 +357,11 @@ Elm.BeerList.make = function (_elm)
                                         Model.PaleLager,
                                         4.3,
                                         A2(Model.Score,6,49));
-                      _elm.BeerList.values = {_op: _op, tsingtao: tsingtao, budweiser: budweiser, carlsberg: carlsberg, londonPride: londonPride};
+                      var allBeers = _J.toList([tsingtao,
+                                                budweiser,
+                                                carlsberg,
+                                                londonPride]);
+                      _elm.BeerList.values = {_op: _op, tsingtao: tsingtao, budweiser: budweiser, carlsberg: carlsberg, londonPride: londonPride, allBeers: allBeers};
                       return _elm.BeerList.values;
                     };Elm.Update = Elm.Update || {};
 Elm.Update.make = function (_elm)
@@ -592,6 +823,273 @@ Elm.Constants.make = function (_elm)
                        var framerate = 10;
                        _elm.Constants.values = {_op: _op, framerate: framerate, ethanolDensity: ethanolDensity, absorptionRate: absorptionRate, gulpRate: gulpRate, sipRate: sipRate, urinationRate: urinationRate};
                        return _elm.Constants.values;
+                     };Elm.Generator = Elm.Generator || {};
+Elm.Generator.Standard = Elm.Generator.Standard || {};
+Elm.Generator.Standard.make = function (_elm)
+                              {
+                                _elm.Generator = _elm.Generator || {};
+                                _elm.Generator.Standard = _elm.Generator.Standard || {};
+                                if (_elm.Generator.Standard.values)
+                                return _elm.Generator.Standard.values;
+                                var _N = Elm.Native,
+                                    _U = _N.Utils.make(_elm),
+                                    _L = _N.List.make(_elm),
+                                    _E = _N.Error.make(_elm),
+                                    _J = _N.JavaScript.make(_elm),
+                                    $moduleName = "Generator.Standard";
+                                var Basics = Elm.Basics.make(_elm);
+                                var Color = Elm.Color.make(_elm);
+                                var Generator = Elm.Generator.make(_elm);
+                                var Graphics = Graphics || {};
+                                Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                                var Graphics = Graphics || {};
+                                Graphics.Element = Elm.Graphics.Element.make(_elm);
+                                var List = Elm.List.make(_elm);
+                                var Maybe = Elm.Maybe.make(_elm);
+                                var Native = Native || {};
+                                Native.Ports = Elm.Native.Ports.make(_elm);
+                                var Prelude = Elm.Prelude.make(_elm);
+                                var Signal = Elm.Signal.make(_elm);
+                                var String = Elm.String.make(_elm);
+                                var Text = Elm.Text.make(_elm);
+                                var Time = Elm.Time.make(_elm);
+                                var _op = {};
+                                var magicNum8 = 2147483562;
+                                var stdRange = function (_v0)
+                                               {
+                                                 return function ()
+                                                        {
+                                                          return {ctor: "_Tuple2", _0: 0, _1: magicNum8};
+                                                        }();
+                                               };
+                                var magicNum7 = 2137383399;
+                                var magicNum6 = 2147483563;
+                                var magicNum5 = 3791;
+                                var magicNum4 = 40692;
+                                var magicNum3 = 52774;
+                                var magicNum2 = 12211;
+                                var magicNum1 = 53668;
+                                var magicNum0 = 40014;
+                                var Standard = F2(function (a,b)
+                                                  {
+                                                    return {ctor: "Standard", _0: a, _1: b};
+                                                  });
+                                var mkStdGen = function (s$)
+                                               {
+                                                 return function ()
+                                                        {
+                                                          var s = A2(Basics.max,s$,0 - s$);
+                                                          var q = s / (magicNum6 - 1) | 0;
+                                                          var s2 = A2(Basics.mod,q,magicNum7 - 1);
+                                                          var s1 = A2(Basics.mod,s,magicNum6 - 1);
+                                                          return A2(Standard,s1 + 1,s2 + 1);
+                                                        }();
+                                               };
+                                var stdNext = function (_v2)
+                                              {
+                                                return function ()
+                                                       {
+                                                         switch (_v2.ctor)
+                                                         {case
+                                                          "Standard" :
+                                                            return function ()
+                                                                   {
+                                                                     var k$ = _v2._1 / magicNum3 | 0;
+                                                                     var s2$ = magicNum4 * (_v2._1 - k$ * magicNum3) - k$ * magicNum5;
+                                                                     var s2$$ = _U.cmp(s2$,
+                                                                                       0) < 0 ? s2$ + magicNum7 : s2$;
+                                                                     var k = _v2._0 / magicNum1 | 0;
+                                                                     var s1$ = magicNum0 * (_v2._0 - k * magicNum1) - k * magicNum2;
+                                                                     var s1$$ = _U.cmp(s1$,
+                                                                                       0) < 0 ? s1$ + magicNum6 : s1$;
+                                                                     var z = s1$$ - s2$$;
+                                                                     var z$ = _U.cmp(z,
+                                                                                     1) < 0 ? z + magicNum8 : z;
+                                                                     return {ctor: "_Tuple2", _0: z$, _1: A2(Standard,
+                                                                                                             s1$$,
+                                                                                                             s2$$)};
+                                                                   }();}
+                                                         _E.Case($moduleName,
+                                                                 "between lines 58 and 66");
+                                                       }();
+                                              };
+                                var stdSplit = function (_v6)
+                                               {
+                                                 return function ()
+                                                        {
+                                                          switch (_v6.ctor)
+                                                          {case
+                                                           "Standard" :
+                                                             return function ()
+                                                                    {
+                                                                      var $raw = Basics.snd(stdNext(_v6)),
+                                                                          $ = $raw.ctor === "Standard" ? $raw : _E.Case($moduleName,
+                                                                                                                        "on line 72, column 28 to 44"),
+                                                                          t1 = $._0,
+                                                                          t2 = $._1;
+                                                                      var new_s2 = _U.eq(_v6._1,
+                                                                                         1) ? magicNum7 - 1 : _v6._1 - 1;
+                                                                      var new_s1 = _U.eq(_v6._0,
+                                                                                         magicNum6 - 1) ? 1 : _v6._0 + 1;
+                                                                      return {ctor: "_Tuple2", _0: A2(Standard,
+                                                                                                      new_s1,
+                                                                                                      t2), _1: A2(Standard,
+                                                                                                                  t1,
+                                                                                                                  new_s2)};
+                                                                    }();}
+                                                          _E.Case($moduleName,
+                                                                  "between lines 70 and 73");
+                                                        }();
+                                               };
+                                var generator = function (seed)
+                                                {
+                                                  return A4(Generator.Generator,
+                                                            mkStdGen(seed),
+                                                            stdNext,
+                                                            stdSplit,
+                                                            stdRange);
+                                                };
+                                _elm.Generator.Standard.values = {_op: _op, generator: generator};
+                                return _elm.Generator.Standard.values;
+                              };Elm.Generator = Elm.Generator || {};
+Elm.Generator.make = function (_elm)
+                     {
+                       _elm.Generator = _elm.Generator || {};
+                       if (_elm.Generator.values)
+                       return _elm.Generator.values;
+                       var _N = Elm.Native,
+                           _U = _N.Utils.make(_elm),
+                           _L = _N.List.make(_elm),
+                           _E = _N.Error.make(_elm),
+                           _J = _N.JavaScript.make(_elm),
+                           $moduleName = "Generator";
+                       var Basics = Elm.Basics.make(_elm);
+                       var Color = Elm.Color.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+                       var Graphics = Graphics || {};
+                       Graphics.Element = Elm.Graphics.Element.make(_elm);
+                       var List = Elm.List.make(_elm);
+                       var Maybe = Elm.Maybe.make(_elm);
+                       var Native = Native || {};
+                       Native.Ports = Elm.Native.Ports.make(_elm);
+                       var Prelude = Elm.Prelude.make(_elm);
+                       var Signal = Elm.Signal.make(_elm);
+                       var String = Elm.String.make(_elm);
+                       var Text = Elm.Text.make(_elm);
+                       var Time = Elm.Time.make(_elm);
+                       var _op = {};
+                       var Generator = F4(function (a,b,c,d)
+                                          {
+                                            return {_: {}, next: b, range: d, split: c, state: a};
+                                          });
+                       var listOfHelp = F4(function (list,generate,n,generator)
+                                           {
+                                             return _U.cmp(n,
+                                                           1) < 0 ? {ctor: "_Tuple2", _0: List.reverse(list), _1: generator} : function ()
+                                                                                                                               {
+                                                                                                                                 var $ = generate(generator),
+                                                                                                                                     value = $._0,
+                                                                                                                                     generator$ = $._1;
+                                                                                                                                 return A4(listOfHelp,
+                                                                                                                                           {ctor: "::", _0: value, _1: list},
+                                                                                                                                           generate,
+                                                                                                                                           n - 1,
+                                                                                                                                           generator$);
+                                                                                                                               }();
+                                           });
+                       var listOf = listOfHelp(_J.toList([]));
+                       var minInt32 = -2147483648;
+                       var maxInt32 = 2147483647;
+                       var iLogBase = F2(function (b,i)
+                                         {
+                                           return _U.cmp(i,b) < 0 ? 1 : 1 + A2(iLogBase,
+                                                                               b,
+                                                                               i / b | 0);
+                                         });
+                       var int32Range = F2(function (_v0,generator)
+                                           {
+                                             return function ()
+                                                    {
+                                                      switch (_v0.ctor)
+                                                      {case
+                                                       "_Tuple2" :
+                                                         return _U.cmp(_v0._0,
+                                                                       _v0._1) > 0 ? A2(int32Range,
+                                                                                        {ctor: "_Tuple2", _0: _v0._1, _1: _v0._0},
+                                                                                        generator) : function ()
+                                                                                                     {
+                                                                                                       var b = 2147483561;
+                                                                                                       var f = F3(function (n,
+                                                                                                                            acc,
+                                                                                                                            state)
+                                                                                                                  {
+                                                                                                                    return function ()
+                                                                                                                           {
+                                                                                                                             switch (n)
+                                                                                                                             {case
+                                                                                                                              0 :
+                                                                                                                                return {ctor: "_Tuple2", _0: acc, _1: state};}
+                                                                                                                             return function ()
+                                                                                                                                    {
+                                                                                                                                      var $ = generator.next(state),
+                                                                                                                                          x = $._0,
+                                                                                                                                          state$ = $._1;
+                                                                                                                                      return A3(f,
+                                                                                                                                                n - 1,
+                                                                                                                                                x + acc * b,
+                                                                                                                                                state$);
+                                                                                                                                    }();
+                                                                                                                           }();
+                                                                                                                  });
+                                                                                                       var k = _v0._1 - _v0._0 + 1;
+                                                                                                       var n = A2(iLogBase,
+                                                                                                                  b,
+                                                                                                                  k);
+                                                                                                       var $ = A3(f,
+                                                                                                                  n,
+                                                                                                                  1,
+                                                                                                                  generator.state),
+                                                                                                           v = $._0,
+                                                                                                           state$ = $._1;
+                                                                                                       return {ctor: "_Tuple2", _0: _v0._0 + A2(Basics.mod,
+                                                                                                                                                v,
+                                                                                                                                                k), _1: _U.replace([["state",
+                                                                                                                                                                     state$]],
+                                                                                                                                                                   generator)};
+                                                                                                     }();}
+                                                      _E.Case($moduleName,
+                                                              "between lines 73 and 86");
+                                                    }();
+                                           });
+                       var floatRange = F2(function (_v5,generator)
+                                           {
+                                             return function ()
+                                                    {
+                                                      switch (_v5.ctor)
+                                                      {case
+                                                       "_Tuple2" :
+                                                         return _U.cmp(_v5._0,
+                                                                       _v5._1) > 0 ? A2(floatRange,
+                                                                                        {ctor: "_Tuple2", _0: _v5._1, _1: _v5._0},
+                                                                                        generator) : function ()
+                                                                                                     {
+                                                                                                       var $ = A2(int32Range,
+                                                                                                                  {ctor: "_Tuple2", _0: minInt32, _1: maxInt32},
+                                                                                                                  generator),
+                                                                                                           x = $._0,
+                                                                                                           generator$ = $._1;
+                                                                                                       var scaled = (_v5._0 + _v5._1) / 2 + (_v5._1 - _v5._0) / Basics.toFloat(maxInt32 - minInt32) * Basics.toFloat(x);
+                                                                                                       return {ctor: "_Tuple2", _0: scaled, _1: generator$};
+                                                                                                     }();}
+                                                      _E.Case($moduleName,
+                                                              "between lines 117 and 122");
+                                                    }();
+                                           });
+                       var $float = floatRange({ctor: "_Tuple2", _0: 0, _1: 1});
+                       var int32 = int32Range({ctor: "_Tuple2", _0: minInt32, _1: maxInt32});
+                       _elm.Generator.values = {_op: _op, Generator: Generator, int32: int32, int32Range: int32Range, $float: $float, floatRange: floatRange, listOf: listOf, minInt32: minInt32, maxInt32: maxInt32};
+                       return _elm.Generator.values;
                      };Elm.SpecialEffects = Elm.SpecialEffects || {};
 Elm.SpecialEffects.make = function (_elm)
                           {
@@ -761,4 +1259,4 @@ Elm.Model.make = function (_elm)
                    var Male = {ctor: "Male"};
                    _elm.Model.values = {_op: _op, Male: Male, Female: Female, PaleLager: PaleLager, PremiumBitter: PremiumBitter, State: State, Person: Person, Beer: Beer, Score: Score, Timing: Timing, Environment: Environment};
                    return _elm.Model.values;
-                 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script><noscript></noscript></body></html>
+                 };</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main, { seed: Math.floor(Math.random() * (Math.pow(2, 32) + Math.pow(2, 32))) - Math.pow(2, 32)})</script><noscript></noscript></body></html>
