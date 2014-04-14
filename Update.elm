@@ -22,10 +22,10 @@ drank person bac =
 updateState : ((Model.State -> Model.State), Time) -> Model.State -> Model.State
 updateState (step, timeStep) state =
     let state' = step state
-    in  {state'| elapsed <- state.elapsed + timeStep, person <- process state'.person timeStep}
+    in  {state'| elapsed <- state.elapsed + timeStep, person <- process timeStep state'.person, frames <- state.frames + 1}
 
-tick : Float -> Model.State -> Model.State
-tick _ state = state
+emptyFrame : a -> Model.State -> Model.State
+emptyFrame _ state = state
 
 consume : Float -> Float -> Model.State -> Model.State
 consume rate timeStep state =
@@ -46,14 +46,14 @@ gulp = consume Constants.gulpRate
 chug : Float -> Model.State -> Model.State
 chug = consume Constants.chugRate
 
-urinate : Float -> Model.State -> Model.State
+urinate : a -> Model.State -> Model.State
 urinate _ state = if (state.person.urine < 10) then state else
     let person = state.person
         person' = {person| urinating <- True}
     in  {state| person <- person'}
 
-process : Model.Person -> Float -> Model.Person
-process person timeStep =
+process : Float -> Model.Person -> Model.Person
+process timeStep person =
         let mr = case person.sex of
                  Model.Male   -> 0.015
                  Model.Female -> 0.017

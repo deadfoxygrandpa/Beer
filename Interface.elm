@@ -21,6 +21,7 @@ makeButtons initial dimensions names =
 keyPressed : Char -> Signal ()
 keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))
 
+box : String -> (Int, Int) -> Color -> Element
 box s (w, h) c = color black . container w h middle
                . color c . container (w-2) (h-2) middle <| plainText s
 
@@ -31,11 +32,11 @@ sip = Input.input ()
 gulp = Input.input ()
 urinate = Input.input ()
 order = Input.input ()
-(chugButton, chugClicks) = (Input.button chug.handle () "slam back a brewski", chug.signal)
-(sipButton, sipClicks) = (Input.button sip.handle () "sip your beer", sip.signal)
-(gulpButton, gulpClicks) = (Input.button gulp.handle () "gulp down some beer", gulp.signal)
-(urinateButton, urinateClicks) = (Input.button urinate.handle () "urinate", urinate.signal)
-(orderButton, orderClicks) = (Input.button order.handle () "order more beer", order.signal)
+(chugButton, chugClicks)       = (Input.button chug.handle    () "slam back a brewski", chug.signal)
+(sipButton, sipClicks)         = (Input.button sip.handle     () "sip your beer"      , sip.signal)
+(gulpButton, gulpClicks)       = (Input.button gulp.handle    () "gulp down some beer", gulp.signal)
+(urinateButton, urinateClicks) = (Input.button urinate.handle () "urinate"            , urinate.signal)
+(orderButton, orderClicks)     = (Input.button order.handle   () "order more beer"    , order.signal)
 
 timeFactor : Signal Time
 timeFactor = (\x -> inHours (1000 * (maybe 1 id <| String.toFloat x) / Constants.framerate)) <~ timeAcceleration
@@ -53,9 +54,9 @@ instructions =
                   , controls
                   ]
 
-render : Int -> Model.State -> (Int, Int) -> Int -> Element
-render x state (w, h) seed = flow outward [instructions, container w h bottomLeft (plainText <| "random seed: " ++ show seed),
-    SpecialEffects.theBest (Model.Environment (w, h) state (toFloat x)) <|
+render : Model.State -> (Int, Int) -> Int -> Element
+render state (w, h) seed = flow outward [instructions, container w h bottomLeft (plainText <| "random seed: " ++ show seed),
+    SpecialEffects.theBest (Model.Environment (w, h) state (toFloat state.frames)) <|
     flow down [ flow right [chugButton, plainText " time acceleration: ", flow right timeAccelerationButtons]
               , flow right [plainText "you are an ", plainText . show <| state.person.weight, plainText "kg ", plainText . show <| state.person.sex]
               , flow right [plainText "your current beer of choice is ", plainText . show <| (snd state.person.beers).name]
@@ -64,7 +65,7 @@ render x state (w, h) seed = flow outward [instructions, container w h bottomLef
               , plainText <| peeDisplay state.person.urine state.person.wetSelf ++ (if state.person.urinating then " (you are peeing)" else "")
               , flow right [plainText "you've had ", plainText . show <| state.drinks, plainText " beers"]
               , flow right [plainText "u been at the bar for: ", plainText <| timeDisplay state.elapsed]
-              , urinateButton
+              , flow right [sipButton, gulpButton, urinateButton]
               ]]
 
 timeDisplay : Time -> String
