@@ -9,4 +9,5 @@ ethanolDensity = 0.789
 absorptionRate = 40
 gulpRate = 25 * 3600
 sipRate = 5 * 3600
+chugRate = 355 * 10 * 3600
 urinationRate = 10 * 3600

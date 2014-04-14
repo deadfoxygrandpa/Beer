@@ -32,38 +32,28 @@ initialPerson : Model.Person
 initialPerson = Model.Person Model.Male 0 80 0 0 False False (355, badBeer)
 
 initialState : Model.State
-initialState = Model.State (fst <| Randomize.person gen) 0 0 0 0
-
-stateSignal : Signal Model.State
-stateSignal = foldp Update.updateState
-                    initialState
-                    ( sampleOn frames
-                        ( (\x y z s g -> Model.Timing x y z s g)
-                            <~ (count <| merge Interface.chugClicks (Interface.keyPressed 'C'))
-                             ~ (count <| merge Interface.urinateClicks (Interface.keyPressed 'U'))
-                             ~ Interface.timeFactor
-                             ~ Keyboard.space
-                             ~ (Keyboard.isDown <| Char.toCode 'G')
-                        )
-                    )
+initialState = Model.State (fst <| Randomize.person gen) 0 0
 
 time : Signal Time
 time = sampleOn frames Interface.timeFactor
 
 updates : Signal ((Model.State -> Model.State), Time)
 updates =
-    let step = merges [ Update.sip' <~ (keepWhen Keyboard.space 0 time)
-                      , Update.gulp' <~ (sampleOn Interface.chugClicks time)
-                      , Update.gulp' <~ (sampleOn (Interface.keyPressed 'C') time)
+    let step = merges [ Update.sip <~ (keepWhen Keyboard.space 0 time)
+                      , Update.chug <~ (sampleOn Interface.chugClicks time)
+                      , Update.chug <~ (sampleOn (Interface.keyPressed 'C') time)
+                      , Update.gulp <~ (keepWhen (Keyboard.isDown <| Char.toCode 'G') 0 time)
+                      , Update.urinate <~ (sampleOn Interface.urinateClicks time)
+                      , Update.urinate <~ (sampleOn (Interface.keyPressed 'U') time)
                       , Update.tick <~ time
                       ]
     in  (,) <~ step ~ time
 
-stateSignal' : Signal Model.State
-stateSignal' = foldp Update.updateState' initialState updates
+stateSignal : Signal Model.State
+stateSignal = foldp Update.updateState initialState updates
 
 main : Signal Element
 main = Interface.render <~ (count frames)
-                         ~ stateSignal'
+                         ~ stateSignal
                          ~ Window.dimensions
                          ~ (constant seed)

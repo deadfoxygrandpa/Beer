@@ -1,7 +1,5 @@
 module Interface where
 
-{-| -}
-
 -- Standard Library imports
 import Graphics.Input as Input
 import String

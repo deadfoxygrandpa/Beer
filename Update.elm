@@ -19,65 +19,38 @@ drank person bac =
                  Model.Female -> 0.49
     in (10 * bac * bw * person.weight) / (1.2 * 0.806)
 
-updateState : Model.Timing -> Model.State -> Model.State
-updateState {beerClicks, urineClicks, timeStep, sipPress, gulpPress} ({person, oldBeerClicks, drinks, oldUrineClicks, elapsed} as state) =
-    let newElapsed = elapsed + timeStep
-        (person', volume) = if | sipPress  -> sip timeStep person
-                               | gulpPress -> gulp timeStep person
-                               | otherwise ->  (person, 0)
-        drinks' = drinks + (volume / 355)
-    in if | beerClicks  > oldBeerClicks  ->
-                {state| person <- {person'| alc <- person.alc + 355*((snd person.beers).abv / 100)*Constants.ethanolDensity}
-                      , drinks <- drinks' + 1
-                      , oldBeerClicks <- beerClicks
-                }
-          | urineClicks > oldUrineClicks && person.urine > 10 ->
-                {state| person <- {person'| urinating <- True}
-                      , drinks <- drinks'
-                      , oldUrineClicks <- urineClicks}
-          | otherwise                    ->
-                {state| person <- process person' timeStep
-                      , elapsed <- newElapsed
-                      , oldUrineClicks <- urineClicks
-                      , drinks <- drinks'
-                }
-
-updateState' : ((Model.State -> Model.State), Time) -> Model.State -> Model.State
-updateState' (step, timeStep) state =
+updateState : ((Model.State -> Model.State), Time) -> Model.State -> Model.State
+updateState (step, timeStep) state =
     let state' = step state
     in  {state'| elapsed <- state.elapsed + timeStep, person <- process state'.person timeStep}
 
 tick : Float -> Model.State -> Model.State
 tick _ state = state
 
-consume' : Float -> Float -> Model.State -> Model.State
-consume' rate timeStep state =
-    let consume'' rate t person =
+consume : Float -> Float -> Model.State -> Model.State
+consume rate timeStep state =
+    let consume' rate t person =
             let volume = rate * t
                 alcVolume = volume * ((snd person.beers).abv / 100)
                 grams = Constants.ethanolDensity * alcVolume
             in ({person| alc <- person.alc + grams}, volume)
-        (person, volume) = consume'' rate timeStep state.person
+        (person, volume) = consume' rate timeStep state.person
     in  {state| person <- person, drinks <- state.drinks + (volume / 355)}
 
-sip' : Float -> Model.State -> Model.State
-sip' = consume' Constants.sipRate
-
-gulp' : Float -> Model.State -> Model.State
-gulp' = consume' Constants.gulpRate
-
-sip : Float -> Model.Person -> (Model.Person, Float)
+sip : Float -> Model.State -> Model.State
 sip = consume Constants.sipRate
 
-gulp : Float -> Model.Person -> (Model.Person, Float)
+gulp : Float -> Model.State -> Model.State
 gulp = consume Constants.gulpRate
 
-consume : Float -> Float -> Model.Person -> (Model.Person, Float)
-consume rate t person =
-    let volume = rate * t
-        alcVolume = volume * ((snd person.beers).abv / 100)
-        grams = Constants.ethanolDensity * alcVolume
-    in ({person| alc <- person.alc + grams}, volume)
+chug : Float -> Model.State -> Model.State
+chug = consume Constants.chugRate
+
+urinate : Float -> Model.State -> Model.State
+urinate _ state = if (state.person.urine < 10) then state else
+    let person = state.person
+        person' = {person| urinating <- True}
+    in  {state| person <- person'}
 
 process : Model.Person -> Float -> Model.Person
 process person timeStep =
