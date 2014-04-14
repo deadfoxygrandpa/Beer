@@ -1,5 +1,7 @@
 module Model where
 
+{-| -}
+
 data Sex = Male | Female
 data BeerStyle = PaleLager | PremiumBitter
 

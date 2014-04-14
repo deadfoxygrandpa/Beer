@@ -1,5 +1,7 @@
 module Interface where
 
+{-| -}
+
 -- Standard Library imports
 import Graphics.Input as Input
 import String
@@ -14,35 +16,43 @@ import Constants
 
 makeButtons : String -> (Int, Int) -> [String] -> ([Element], Signal String)
 makeButtons initial dimensions names =
-    let pool = Input.customButtons initial
-    in ( map (\s -> pool.customButton s (box s dimensions white) (box s dimensions lightGrey) (box s dimensions grey)) names
-       , pool.events)
+    let inputs = map (\_ -> Input.input initial) names
+        elems  = map (\(i, n) -> Input.customButton i.handle n (box n dimensions white) (box n dimensions lightGrey) (box n dimensions grey)) (zip inputs names)
+    in  (elems, merges <| map .signal inputs)
+    --let pool = Input.customButton initial
+    --in ( map (\s -> pool.customButton s (box s dimensions white) (box s dimensions lightGrey) (box s dimensions grey)) names
+    --   , pool.events)
 
 keyPressed : Char -> Signal ()
-keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))    
+keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))
 
-box s (w, h) c = color black . container w h middle 
-               . color c . container (w-2) (h-2) middle <| plainText s    
+box s (w, h) c = color black . container w h middle
+               . color c . container (w-2) (h-2) middle <| plainText s
 
 (timeAccelerationButtons, timeAcceleration) = makeButtons "1" (40, 30) ["1", "2", "60", "600"]
 
-(chugButton, chugClicks) = Input.button "slam back a brewski"
-(sipButton, sipClicks) = Input.button "sip your beer"
-(gulpButton, gulpClicks) = Input.button "gulp down some beer"
-(urinateButton, urinateClicks) = Input.button "urinate"
-(orderButton, orderClicks) = Input.button "order more beer"
+chug = Input.input ()
+sip = Input.input ()
+gulp = Input.input ()
+urinate = Input.input ()
+order = Input.input ()
+(chugButton, chugClicks) = (Input.button chug.handle () "slam back a brewski", chug.signal)
+(sipButton, sipClicks) = (Input.button sip.handle () "sip your beer", sip.signal)
+(gulpButton, gulpClicks) = (Input.button gulp.handle () "gulp down some beer", gulp.signal)
+(urinateButton, urinateClicks) = (Input.button urinate.handle () "urinate", urinate.signal)
+(orderButton, orderClicks) = (Input.button order.handle () "order more beer", order.signal)
 --(picker, timeAcceleration) = Input.stringDropDown <| map show [1..1000]
 
 timeFactor = (\x -> inHours (1000 * (maybe 1 id <| String.toFloat x) / Constants.framerate)) <~ timeAcceleration
 
 instructions : Element
-instructions = 
+instructions =
     let controls = flow down <| map plainText [ "spacebar: sip beer"
                                               , "g: gulp some beer"
                                               , "c: chug beer (slam back a brewski)"
                                               , "u: urinate"
                                               , "ctrl + w: win game"
-                                              , "clickar buttons: self explanatory" 
+                                              , "clickar buttons: self explanatory"
                                               ]
     in flow right [ container 100 (heightOf controls) middle <| plainText "controls: "
                   , controls
@@ -63,15 +73,15 @@ render x state (w, h) seed = flow outward [instructions, container w h bottomLef
               ]]
 
 timeDisplay : Time -> String
-timeDisplay t = 
+timeDisplay t =
     let t' = t * 3600000
         hours = floor <| inHours t'
         minutes = mod (floor <| inMinutes t') 60
         seconds = mod (floor <| inSeconds t') 60
-    in String.padLeft 2 '0' (show hours) 
-    ++ ":" 
-    ++ String.padLeft 2 '0' (show minutes) 
-    ++ ":" 
+    in String.padLeft 2 '0' (show hours)
+    ++ ":"
+    ++ String.padLeft 2 '0' (show minutes)
+    ++ ":"
     ++ String.padLeft 2 '0' (show seconds)
 
 peeDisplay : Float -> Bool -> String
@@ -81,4 +91,4 @@ peeDisplay urine wetSelf =
        | urine < 150 -> "you kinda have to pee"
        | urine < 250 -> "you gotta go!"
        | urine < 500 -> "you seriously gotta pee real bad"
-       | otherwise   -> "you peed your pants, moron. i told you to go to the bathroom"                  
+       | otherwise   -> "you peed your pants, moron. i told you to go to the bathroom"

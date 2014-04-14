@@ -35,11 +35,11 @@ initialState : Model.State
 initialState = Model.State (fst <| Randomize.person gen) 0 0 0 0
 
 stateSignal : Signal Model.State
-stateSignal = foldp Update.updateState 
+stateSignal = foldp Update.updateState
                     initialState
                     ( sampleOn frames
-                        ( (\x y z s g -> Model.Timing x y z s g) 
-                            <~ (count <| merge Interface.chugClicks (Interface.keyPressed 'C')) 
+                        ( (\x y z s g -> Model.Timing x y z s g)
+                            <~ (count <| merge Interface.chugClicks (Interface.keyPressed 'C'))
                              ~ (count <| merge Interface.urinateClicks (Interface.keyPressed 'U'))
                              ~ Interface.timeFactor
                              ~ Keyboard.space
@@ -48,7 +48,7 @@ stateSignal = foldp Update.updateState
                     )
 
 main : Signal Element
-main = Interface.render <~ (count frames) 
-                         ~ stateSignal 
+main = Interface.render <~ (count frames)
+                         ~ stateSignal
                          ~ Window.dimensions
                          ~ (constant seed)

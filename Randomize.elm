@@ -25,7 +25,7 @@ normal gen =
                       in if (s < 1) then (x, y, s, gen'') else makeXY gen''
         (x, y, s, gen') = makeXY gen
         n = x * (sqrt <| (-2 * (logBase e s)) / s)
-    in (n, gen')    
+    in (n, gen')
 
 normal' : (Float, Float) -> Generator.Generator g -> (Float, Generator.Generator g)
 normal' (mean, sigma) gen =
@@ -40,7 +40,7 @@ sex gen =
     in (bool2Sex x, gen')
 
 bac : Generator.Generator g -> (Float, Generator.Generator g)
-bac gen = 
+bac gen =
     let (x, gen') = normal' (0, 0.05) gen
     in (clamp 0 100 x, gen')
 
@@ -52,7 +52,7 @@ weight sex =
     in normal' (mean, sigma)
 
 urine : Generator.Generator g -> (Float, Generator.Generator g)
-urine gen = 
+urine gen =
     let (x, gen') = normal' (50, 35) gen
     in (clamp 0 1000 x, gen')
 
