@@ -47,8 +47,23 @@ stateSignal = foldp Update.updateState
                         )
                     )
 
+time : Signal Time
+time = sampleOn frames Interface.timeFactor
+
+updates : Signal ((Model.State -> Model.State), Time)
+updates =
+    let step = merges [ Update.sip' <~ (keepWhen Keyboard.space 0 time)
+                      , Update.gulp' <~ (sampleOn Interface.chugClicks time)
+                      , Update.gulp' <~ (sampleOn (Interface.keyPressed 'C') time)
+                      , Update.tick <~ time
+                      ]
+    in  (,) <~ step ~ time
+
+stateSignal' : Signal Model.State
+stateSignal' = foldp Update.updateState' initialState updates
+
 main : Signal Element
 main = Interface.render <~ (count frames)
-                         ~ stateSignal
+                         ~ stateSignal'
                          ~ Window.dimensions
                          ~ (constant seed)

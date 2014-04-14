@@ -42,6 +42,30 @@ updateState {beerClicks, urineClicks, timeStep, sipPress, gulpPress} ({person, o
                       , drinks <- drinks'
                 }
 
+updateState' : ((Model.State -> Model.State), Time) -> Model.State -> Model.State
+updateState' (step, timeStep) state =
+    let state' = step state
+    in  {state'| elapsed <- state.elapsed + timeStep, person <- process state'.person timeStep}
+
+tick : Float -> Model.State -> Model.State
+tick _ state = state
+
+consume' : Float -> Float -> Model.State -> Model.State
+consume' rate timeStep state =
+    let consume'' rate t person =
+            let volume = rate * t
+                alcVolume = volume * ((snd person.beers).abv / 100)
+                grams = Constants.ethanolDensity * alcVolume
+            in ({person| alc <- person.alc + grams}, volume)
+        (person, volume) = consume'' rate timeStep state.person
+    in  {state| person <- person, drinks <- state.drinks + (volume / 355)}
+
+sip' : Float -> Model.State -> Model.State
+sip' = consume' Constants.sipRate
+
+gulp' : Float -> Model.State -> Model.State
+gulp' = consume' Constants.gulpRate
+
 sip : Float -> Model.Person -> (Model.Person, Float)
 sip = consume Constants.sipRate
 

@@ -19,9 +19,6 @@ makeButtons initial dimensions names =
     let inputs = map (\_ -> Input.input initial) names
         elems  = map (\(i, n) -> Input.customButton i.handle n (box n dimensions white) (box n dimensions lightGrey) (box n dimensions grey)) (zip inputs names)
     in  (elems, merges <| map .signal inputs)
-    --let pool = Input.customButton initial
-    --in ( map (\s -> pool.customButton s (box s dimensions white) (box s dimensions lightGrey) (box s dimensions grey)) names
-    --   , pool.events)
 
 keyPressed : Char -> Signal ()
 keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))
@@ -41,8 +38,8 @@ order = Input.input ()
 (gulpButton, gulpClicks) = (Input.button gulp.handle () "gulp down some beer", gulp.signal)
 (urinateButton, urinateClicks) = (Input.button urinate.handle () "urinate", urinate.signal)
 (orderButton, orderClicks) = (Input.button order.handle () "order more beer", order.signal)
---(picker, timeAcceleration) = Input.stringDropDown <| map show [1..1000]
 
+timeFactor : Signal Time
 timeFactor = (\x -> inHours (1000 * (maybe 1 id <| String.toFloat x) / Constants.framerate)) <~ timeAcceleration
 
 instructions : Element
