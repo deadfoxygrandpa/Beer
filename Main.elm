@@ -16,6 +16,7 @@ import Randomize
 -- Catalog imports
 import Generator
 import Generator.Standard
+import Signal.InputGroups as InputGroups
 
 frames : Signal Time
 frames = fps Constants.framerate
@@ -52,7 +53,12 @@ updates =
     in  (,) <~ step ~ time
 
 stateSignal : Signal Model.State
-stateSignal = foldp Update.updateState initialState updates
+stateSignal = foldp Update.updateState initialState updates'
+
+paused = Interface.latch <| Interface.keyPressed 'P'
+
+inputGroup = InputGroups.makeGroup paused
+updates' = inputGroup.add updates (Update.emptyFrame 0, 0)
 
 main : Signal Element
 main = Interface.render <~ stateSignal

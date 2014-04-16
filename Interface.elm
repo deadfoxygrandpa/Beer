@@ -21,6 +21,9 @@ makeButtons initial dimensions names =
 keyPressed : Char -> Signal ()
 keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))
 
+latch : Signal a -> Signal Bool
+latch sig = dropRepeats <| (\x -> mod x 2 == 0) <~ (count sig)
+
 box : String -> (Int, Int) -> Color -> Element
 box s (w, h) c = color black . container w h middle
                . color c . container (w-2) (h-2) middle <| plainText s
@@ -49,6 +52,7 @@ instructions =
                                               , "u: urinate"
                                               , "ctrl + w: win game"
                                               , "clickar buttons: self explanatory"
+                                              , "p: pause game"
                                               ]
     in flow right [ container 100 (heightOf controls) middle <| plainText "controls: "
                   , controls
