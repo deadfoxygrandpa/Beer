@@ -55,12 +55,24 @@ updates =
 stateSignal : Signal Model.State
 stateSignal = foldp Update.updateState initialState updates'
 
-paused = Interface.latch <| Interface.keyPressed 'P'
+initialGameState : Model.GameState
+initialGameState = Model.GameState False False
 
-inputGroup = InputGroups.makeGroup paused
+gameStateUpdates : Signal (Model.GameState -> Model.GameState)
+gameStateUpdates = merges [ Update.togglePause <~ (Interface.keyPressed 'P')
+                          , Update.toggleMenu  <~ (Interface.keyCodePressed 27)
+                          ]
+
+gameStateSignal : Signal Model.GameState
+gameStateSignal = foldp Update.updateGameState initialGameState gameStateUpdates
+
+inputGroup = InputGroups.makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~ gameStateSignal)
 updates' = inputGroup.add updates (Update.emptyFrame 0, 0)
 
+gameScreen : Signal Element
+gameScreen = Interface.render <~ stateSignal
+                               ~ Window.dimensions
+                               ~ (constant seed)
+
 main : Signal Element
-main = Interface.render <~ stateSignal
-                         ~ Window.dimensions
-                         ~ (constant seed)
+main = (\g x -> if x then plainText "Menu~" else g) <~ gameScreen ~ (.menuOpen <~ gameStateSignal)

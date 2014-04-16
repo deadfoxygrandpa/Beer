@@ -11,3 +11,5 @@ type Score = {overallScore : Float, styleScore : Float}
 type Environment = {windowSize : (Int, Int), state : State, time : Float}
 
 type SpecialEffect = Environment -> Element -> Element
+
+type GameState = {paused : Bool, menuOpen : Bool}

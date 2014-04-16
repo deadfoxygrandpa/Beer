@@ -21,6 +21,9 @@ makeButtons initial dimensions names =
 keyPressed : Char -> Signal ()
 keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))
 
+keyCodePressed : Char.KeyCode -> Signal ()
+keyCodePressed code = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown code)))
+
 latch : Signal a -> Signal Bool
 latch sig = dropRepeats <| (\x -> mod x 2 == 0) <~ (count sig)
 

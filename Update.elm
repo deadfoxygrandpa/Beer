@@ -72,3 +72,12 @@ process timeStep person =
                   , urine <- clamp 0 700 <| person.urine + urine - urinated
                   , urinating <- urinating
                   , wetSelf <- wetSelf}
+
+updateGameState : (Model.GameState -> Model.GameState) -> Model.GameState -> Model.GameState
+updateGameState step state = step state
+
+toggleMenu : a -> Model.GameState -> Model.GameState
+toggleMenu _ state = {state| menuOpen <- not state.menuOpen }
+
+togglePause : a -> Model.GameState -> Model.GameState
+togglePause _ state = if state.menuOpen then state else {state| paused <- not state.paused}
