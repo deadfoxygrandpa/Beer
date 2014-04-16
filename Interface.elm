@@ -19,7 +19,7 @@ makeButtons initial dimensions names =
     in  (elems, merges <| map .signal inputs)
 
 keyPressed : Char -> Signal ()
-keyPressed char = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown (Char.toCode char))))
+keyPressed char = keyCodePressed <| Char.toCode char
 
 keyCodePressed : Char.KeyCode -> Signal ()
 keyCodePressed code = (\_ -> ()) <~ (dropRepeats <| ((\n -> n `div` 2) <~ (count <| Keyboard.isDown code)))
