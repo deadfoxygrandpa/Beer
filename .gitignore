@@ -5,3 +5,6 @@
 build/
 cache/
 elm_dependencies/
+docs/
+*.elmo
+*.elmi
