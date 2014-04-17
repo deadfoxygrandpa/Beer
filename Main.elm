@@ -12,6 +12,7 @@ import Update
 import Constants
 import BeerList
 import Randomize
+import Menu
 
 -- Catalog imports
 import Generator
@@ -74,5 +75,18 @@ gameScreen = Interface.render <~ stateSignal
                                ~ Window.dimensions
                                ~ (constant seed)
 
+initialMenu = Menu.menu
+
+menuUpdates : Signal (Menu.Menu -> Menu.Menu)
+menuUpdates = merges [ Menu.moveUp <~ Interface.keyCodePressed 38
+                     , Menu.moveDown <~ Interface.keyCodePressed 40
+                     ]
+
+menuSignal : Signal Menu.Menu
+menuSignal = foldp Menu.update initialMenu menuUpdates
+
+menuScreen : Signal Element
+menuScreen = Menu.render <~ menuSignal ~ Window.dimensions
+
 main : Signal Element
-main = (\g x -> if x then plainText "Menu~" else g) <~ gameScreen ~ (.menuOpen <~ gameStateSignal)
+main = (\g m x -> if x then m else g) <~ gameScreen ~ menuScreen ~ (.menuOpen <~ gameStateSignal)
