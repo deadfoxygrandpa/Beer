@@ -27,20 +27,25 @@ fromList (x::xs) = Zipper [] x xs
 toList : Zipper x -> [x]
 toList (Zipper a x b) = reverse a ++ [x] ++ b
 
-type Menu = Zipper String
+type Menu = {title: String, items: Zipper String}
 
 menu : Menu
-menu = fromList <| map .name  BeerList.allBeers
+menu = Menu "Beer Menu" <| fromList <| map .name  BeerList.allBeers
 
 update : (Menu -> Menu) -> Menu -> Menu
 update step menu = step menu
 
 moveUp : a -> Menu -> Menu
-moveUp _ menu = maybe menu id <| left menu
+moveUp _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| left menu.items}
 
 moveDown : a -> Menu -> Menu
-moveDown _ menu = maybe menu id <| right menu
+moveDown _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| right menu.items}
 
 render : Menu -> (Int, Int) -> Element
-render menu (w, h) = container w h midLeft <|
-    flow down <| map plainText (reverse <| getLeft menu) ++ [centered . bold . toText <| select menu] ++ map plainText (getRight menu)
+render {title, items} (w, h) =
+    let choices = container w h middle
+                    <| flow down . map (container w 40 middle) <| map plainText (reverse <| getLeft items)
+                    ++ [color lightGrey . plainText . select <| items]
+                    ++ map plainText (getRight items)
+        heading = container w h midTop . centered . Text.height 40 . bold . toText <| title
+    in  layers [choices, heading]
