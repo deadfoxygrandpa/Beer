@@ -26,6 +26,7 @@ Elm.Main.make = function (_elm) {
    var Keyboard = Elm.Keyboard.make(_elm);
    var List = Elm.List.make(_elm);
    var Maybe = Elm.Maybe.make(_elm);
+   var Menu = Elm.Menu.make(_elm);
    var Model = Elm.Model.make(_elm);
    var Native = Native || {};
    Native.Json = Elm.Native.Json.make(_elm);
@@ -41,12 +42,22 @@ Elm.Main.make = function (_elm) {
    var Update = Elm.Update.make(_elm);
    var Window = Elm.Window.make(_elm);
    var _op = {};
+   var menuUpdates = Signal.merges(_L.fromArray([A2(Signal._op["<~"],
+                                                Menu.moveUp,
+                                                Interface.keyCodePressed(38))
+                                                ,A2(Signal._op["<~"],
+                                                Menu.moveDown,
+                                                Interface.keyCodePressed(40))]));
+   var initialMenu = Menu.menu;
    var gameStateUpdates = Signal.merges(_L.fromArray([A2(Signal._op["<~"],
                                                      Update.togglePause,
                                                      Interface.keyPressed(_U.chr("P")))
                                                      ,A2(Signal._op["<~"],
                                                      Update.toggleMenu,
-                                                     Interface.keyCodePressed(27))]));
+                                                     Interface.keyCodePressed(27))
+                                                     ,A2(Signal._op["<~"],
+                                                     Update.closeMenu,
+                                                     Interface.keyCodePressed(13))]));
    var initialGameState = A2(Model.GameState,
    false,
    false);
@@ -54,22 +65,55 @@ Elm.Main.make = function (_elm) {
    Update.updateGameState,
    initialGameState,
    gameStateUpdates);
-   var inputGroup = Signal.InputGroups.makeGroup(A2(Signal._op["<~"],
+   var gameGroup = Signal.InputGroups.makeGroup(A2(Signal._op["<~"],
    function (g) {
       return Basics.not(List.or(_L.fromArray([g.paused
                                              ,g.menuOpen])));
    },
    gameStateSignal));
+   var menuGroup = Signal.InputGroups.makeGroup(A2(Signal._op["<~"],
+   function (_) {
+      return _.menuOpen;
+   },
+   gameStateSignal));
+   var menuUpdates$ = A2(menuGroup.add,
+   menuUpdates,
+   Basics.id);
+   var menuSignal = A3(Signal.foldp,
+   Menu.update,
+   initialMenu,
+   menuUpdates$);
+   var menuScreen = A2(Signal._op["~"],
+   A2(Signal._op["<~"],
+   Menu.render(function (_) {
+      return _.name;
+   }),
+   menuSignal),
+   Window.dimensions);
+   var currentBeer = A2(Signal._op["<~"],
+   function ($) {
+      return Menu.select(function (_) {
+         return _.items;
+      }($));
+   },
+   A2(Signal.sampleOn,
+   A2(menuGroup.add,
+   Interface.keyCodePressed(13),
+   {ctor: "_Tuple0"}),
+   menuSignal));
    var seed = Native.Ports.portIn("seed",
    function (v) {
       return typeof v === "number" ? v : _E.raise("invalid input, expecting JSNumber but got " + v);
    });
    var gen = Generator.Standard.generator(seed);
-   var initialState = A4(Model.State,
+   var initialState = A5(Model.State,
    Basics.fst(Randomize.person(gen)),
    0,
    0,
-   0);
+   0,
+   _L.fromArray([A2(Model.Message,
+   "Bartender: welcome",
+   5)]));
    var badBeer = BeerList.tsingtao;
    var initialPerson = A8(Model.Person,
    Model.Male,
@@ -130,6 +174,12 @@ Elm.Main.make = function (_elm) {
                                             Interface.keyPressed(_U.chr("U")),
                                             time))
                                             ,A2(Signal._op["<~"],
+                                            Update.orderAnother,
+                                            Interface.orderClicks)
+                                            ,A2(Signal._op["<~"],
+                                            Update.orderAnother,
+                                            Interface.keyPressed(_U.chr("O")))
+                                            ,A2(Signal._op["<~"],
                                             Update.emptyFrame,
                                             time)]));
       return A2(Signal._op["~"],
@@ -142,7 +192,7 @@ Elm.Main.make = function (_elm) {
       step),
       time);
    }();
-   var updates$ = A2(inputGroup.add,
+   var updates$ = A2(gameGroup.add,
    updates,
    {ctor: "_Tuple2"
    ,_0: Update.emptyFrame(0)
@@ -159,11 +209,13 @@ Elm.Main.make = function (_elm) {
    Window.dimensions),
    Signal.constant(seed));
    var main = A2(Signal._op["~"],
+   A2(Signal._op["~"],
    A2(Signal._op["<~"],
-   F2(function (g,x) {
-      return x ? Text.plainText("Menu~") : g;
+   F3(function (g,m,x) {
+      return x ? m : g;
    }),
    gameScreen),
+   menuScreen),
    A2(Signal._op["<~"],
    function (_) {
       return _.menuOpen;
@@ -181,9 +233,16 @@ Elm.Main.make = function (_elm) {
                       ,initialGameState: initialGameState
                       ,gameStateUpdates: gameStateUpdates
                       ,gameStateSignal: gameStateSignal
-                      ,inputGroup: inputGroup
+                      ,gameGroup: gameGroup
                       ,updates$: updates$
                       ,gameScreen: gameScreen
+                      ,initialMenu: initialMenu
+                      ,menuGroup: menuGroup
+                      ,menuUpdates$: menuUpdates$
+                      ,menuUpdates: menuUpdates
+                      ,menuSignal: menuSignal
+                      ,currentBeer: currentBeer
+                      ,menuScreen: menuScreen
                       ,main: main};
    return _elm.Main.values;
 };Elm.Randomize = Elm.Randomize || {};
@@ -414,6 +473,207 @@ Elm.Randomize.make = function (_elm) {
                            ,beer: beer
                            ,person: person};
    return _elm.Randomize.values;
+};Elm.Menu = Elm.Menu || {};
+Elm.Menu.make = function (_elm) {
+   "use strict";
+   _elm.Menu = _elm.Menu || {};
+   if (_elm.Menu.values)
+   return _elm.Menu.values;
+   var _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Menu";
+   var Basics = Elm.Basics.make(_elm);
+   var BeerList = Elm.BeerList.make(_elm);
+   var Color = Elm.Color.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var List = Elm.List.make(_elm);
+   var Maybe = Elm.Maybe.make(_elm);
+   var Model = Elm.Model.make(_elm);
+   var Native = Native || {};
+   Native.Json = Elm.Native.Json.make(_elm);
+   var Native = Native || {};
+   Native.Ports = Elm.Native.Ports.make(_elm);
+   var Signal = Elm.Signal.make(_elm);
+   var String = Elm.String.make(_elm);
+   var Text = Elm.Text.make(_elm);
+   var Time = Elm.Time.make(_elm);
+   var _op = {};
+   var update = F2(function (step,
+   menu) {
+      return step(menu);
+   });
+   var Menu = F2(function (a,b) {
+      return {_: {}
+             ,items: b
+             ,title: a};
+   });
+   var Zipper = F3(function (a,
+   b,
+   c) {
+      return {ctor: "Zipper"
+             ,_0: a
+             ,_1: b
+             ,_2: c};
+   });
+   var left = function (_v0) {
+      return function () {
+         switch (_v0.ctor)
+         {case "Zipper":
+            return _U.eq(List.length(_v0._0),
+              0) ? Maybe.Nothing : Maybe.Just(A3(Zipper,
+              List.tail(_v0._0),
+              List.head(_v0._0),
+              {ctor: "::"
+              ,_0: _v0._1
+              ,_1: _v0._2}));}
+         _E.Case($moduleName,
+         "between lines 9 and 10");
+      }();
+   };
+   var moveUp = F2(function (_v5,
+   _v6) {
+      return function () {
+         return function () {
+            return _U.replace([["items"
+                               ,A2(Maybe.maybe,
+                               _v6.items,
+                               Basics.id)(left(_v6.items))]],
+            _v6);
+         }();
+      }();
+   });
+   var right = function (_v9) {
+      return function () {
+         switch (_v9.ctor)
+         {case "Zipper":
+            return _U.eq(List.length(_v9._2),
+              0) ? Maybe.Nothing : Maybe.Just(A3(Zipper,
+              {ctor: "::"
+              ,_0: _v9._1
+              ,_1: _v9._0},
+              List.head(_v9._2),
+              List.tail(_v9._2)));}
+         _E.Case($moduleName,
+         "between lines 13 and 14");
+      }();
+   };
+   var moveDown = F2(function (_v14,
+   _v15) {
+      return function () {
+         return function () {
+            return _U.replace([["items"
+                               ,A2(Maybe.maybe,
+                               _v15.items,
+                               Basics.id)(right(_v15.items))]],
+            _v15);
+         }();
+      }();
+   });
+   var select = function (_v18) {
+      return function () {
+         switch (_v18.ctor)
+         {case "Zipper": return _v18._1;}
+         _E.Case($moduleName,
+         "on line 17, column 25 to 26");
+      }();
+   };
+   var getLeft = function (_v23) {
+      return function () {
+         switch (_v23.ctor)
+         {case "Zipper": return _v23._0;}
+         _E.Case($moduleName,
+         "on line 20, column 26 to 27");
+      }();
+   };
+   var getRight = function (_v28) {
+      return function () {
+         switch (_v28.ctor)
+         {case "Zipper": return _v28._2;}
+         _E.Case($moduleName,
+         "on line 23, column 27 to 28");
+      }();
+   };
+   var render = F3(function (toString,
+   _v33,
+   _v34) {
+      return function () {
+         switch (_v34.ctor)
+         {case "_Tuple2":
+            return function () {
+                 return function () {
+                    var heading = A3(Graphics.Element.container,
+                    _v34._0,
+                    _v34._1,
+                    Graphics.Element.midTop)(Text.centered(Text.height(40)(Text.bold(Text.toText(_v33.title)))));
+                    var choices = A3(Graphics.Element.container,
+                    _v34._0,
+                    _v34._1,
+                    Graphics.Element.middle)(Graphics.Element.flow(Graphics.Element.down)(List.map(A3(Graphics.Element.container,
+                    _v34._0,
+                    40,
+                    Graphics.Element.middle))(_L.append(A2(List.map,
+                    function ($) {
+                       return Text.plainText(toString($));
+                    },
+                    List.reverse(getLeft(_v33.items))),
+                    _L.append(_L.fromArray([Graphics.Element.color(Color.lightGrey)(Text.plainText(toString(select(_v33.items))))]),
+                    A2(List.map,
+                    function ($) {
+                       return Text.plainText(toString($));
+                    },
+                    getRight(_v33.items)))))));
+                    return Graphics.Element.layers(_L.fromArray([choices
+                                                                ,heading]));
+                 }();
+              }();}
+         _E.Case($moduleName,
+         "between lines 47 and 52");
+      }();
+   });
+   var fromList = function (_v39) {
+      return function () {
+         switch (_v39.ctor)
+         {case "::": return A3(Zipper,
+              _L.fromArray([]),
+              _v39._0,
+              _v39._1);}
+         _E.Case($moduleName,
+         "on line 26, column 20 to 34");
+      }();
+   };
+   var menu = Menu("Beer Menu")(fromList(BeerList.allBeers));
+   var toList = function (_v43) {
+      return function () {
+         switch (_v43.ctor)
+         {case "Zipper":
+            return _L.append(List.reverse(_v43._0),
+              _L.append(_L.fromArray([_v43._1]),
+              _v43._2));}
+         _E.Case($moduleName,
+         "on line 29, column 25 to 46");
+      }();
+   };
+   _elm.Menu.values = {_op: _op
+                      ,left: left
+                      ,right: right
+                      ,select: select
+                      ,getLeft: getLeft
+                      ,getRight: getRight
+                      ,fromList: fromList
+                      ,toList: toList
+                      ,menu: menu
+                      ,update: update
+                      ,moveUp: moveUp
+                      ,moveDown: moveDown
+                      ,render: render
+                      ,Zipper: Zipper
+                      ,Menu: Menu};
+   return _elm.Menu.values;
 };Elm.BeerList = Elm.BeerList || {};
 Elm.BeerList.make = function (_elm) {
    "use strict";
@@ -516,7 +776,15 @@ Elm.Update.make = function (_elm) {
          state);
       }();
    });
-   var toggleMenu = F2(function (_v2,
+   var closeMenu = F2(function (_v2,
+   state) {
+      return function () {
+         return _U.replace([["menuOpen"
+                            ,false]],
+         state);
+      }();
+   });
+   var toggleMenu = F2(function (_v4,
    state) {
       return function () {
          return _U.replace([["menuOpen"
@@ -528,7 +796,44 @@ Elm.Update.make = function (_elm) {
    state) {
       return step(state);
    });
-   var urinate = F2(function (_v4,
+   var addMessage = F3(function (s,
+   t,
+   state) {
+      return _U.replace([["messages"
+                         ,{ctor: "::"
+                          ,_0: A2(Model.Message,s,t)
+                          ,_1: state.messages}]],
+      state);
+   });
+   var order = F2(function (beer,
+   state) {
+      return _U.cmp(Basics.fst(state.person.beers),
+      10) > 0 ? A3(addMessage,
+      "Bartender: finish that one first!",
+      5,
+      state) : function () {
+         var person = state.person;
+         var person$ = _U.replace([["beers"
+                                   ,{ctor: "_Tuple2"
+                                    ,_0: 355
+                                    ,_1: beer}]],
+         person);
+         return A3(addMessage,
+         "Bartender: enjoy!",
+         5,
+         _U.replace([["person",person$]],
+         state));
+      }();
+   });
+   var orderAnother = F2(function (_v6,
+   state) {
+      return function () {
+         return A2(order,
+         Basics.snd(state.person.beers),
+         state);
+      }();
+   });
+   var urinate = F2(function (_v8,
    state) {
       return function () {
          return _U.cmp(state.person.urine,
@@ -551,12 +856,21 @@ Elm.Update.make = function (_elm) {
          t,
          person) {
             return function () {
-               var volume = rate * t;
+               var $ = person.beers,
+               remaining = $._0,
+               beer = $._1;
+               var volume = A2(Basics.clamp,
+               0,
+               remaining)(rate * t);
                var alcVolume = volume * (Basics.snd(person.beers).abv / 100);
                var grams = Constants.ethanolDensity * alcVolume;
                return {ctor: "_Tuple2"
                       ,_0: _U.replace([["alc"
-                                       ,person.alc + grams]],
+                                       ,person.alc + grams]
+                                      ,["beers"
+                                       ,{ctor: "_Tuple2"
+                                        ,_0: remaining - volume
+                                        ,_1: beer}]],
                       person)
                       ,_1: volume};
             }();
@@ -577,7 +891,7 @@ Elm.Update.make = function (_elm) {
    var sip = consume(Constants.sipRate);
    var gulp = consume(Constants.gulpRate);
    var chug = consume(Constants.chugRate);
-   var emptyFrame = F2(function (_v6,
+   var emptyFrame = F2(function (_v10,
    state) {
       return function () {
          return state;
@@ -587,8 +901,8 @@ Elm.Update.make = function (_elm) {
    bac) {
       return function () {
          var bw = function () {
-            var _v8 = person.sex;
-            switch (_v8.ctor)
+            var _v12 = person.sex;
+            switch (_v12.ctor)
             {case "Female": return 0.49;
                case "Male": return 0.58;}
             _E.Case($moduleName,
@@ -601,8 +915,8 @@ Elm.Update.make = function (_elm) {
    person) {
       return function () {
          var bw = function () {
-            var _v9 = person.sex;
-            switch (_v9.ctor)
+            var _v13 = person.sex;
+            switch (_v13.ctor)
             {case "Female": return 0.49;
                case "Male": return 0.58;}
             _E.Case($moduleName,
@@ -636,12 +950,12 @@ Elm.Update.make = function (_elm) {
          absorbed * 1.19,
          person);
          var mr = function () {
-            var _v10 = person.sex;
-            switch (_v10.ctor)
+            var _v14 = person.sex;
+            switch (_v14.ctor)
             {case "Female": return 1.7e-2;
                case "Male": return 1.5e-2;}
             _E.Case($moduleName,
-            "between lines 57 and 60");
+            "between lines 74 and 77");
          }();
          var m = mr * timeStep;
          var metabolized = _U.cmp(m,
@@ -663,24 +977,35 @@ Elm.Update.make = function (_elm) {
          person);
       }();
    });
-   var updateState = F2(function (_v11,
+   var updateState = F2(function (_v15,
    state) {
       return function () {
-         switch (_v11.ctor)
+         switch (_v15.ctor)
          {case "_Tuple2":
             return function () {
-                 var state$ = _v11._0(state);
+                 var state$ = _v15._0(state);
+                 var messages$ = List.filter(function (msg) {
+                    return _U.cmp(msg.timeout,
+                    0) > 0;
+                 })(List.map(function (_v19) {
+                    return function () {
+                       return A2(Model.Message,
+                       _v19.msg,
+                       _v19.timeout - _v15._1 * 3600);
+                    }();
+                 })(state$.messages));
                  return _U.replace([["elapsed"
-                                    ,state.elapsed + _v11._1]
+                                    ,state.elapsed + _v15._1]
                                    ,["person"
                                     ,A2(process,
-                                    _v11._1,
+                                    _v15._1,
                                     state$.person)]
-                                   ,["frames",state.frames + 1]],
+                                   ,["frames",state.frames + 1]
+                                   ,["messages",messages$]],
                  state$);
               }();}
          _E.Case($moduleName,
-         "between lines 24 and 25");
+         "between lines 24 and 29");
       }();
    });
    _elm.Update.values = {_op: _op
@@ -693,9 +1018,13 @@ Elm.Update.make = function (_elm) {
                         ,gulp: gulp
                         ,chug: chug
                         ,urinate: urinate
+                        ,order: order
+                        ,orderAnother: orderAnother
+                        ,addMessage: addMessage
                         ,process: process
                         ,updateGameState: updateGameState
                         ,toggleMenu: toggleMenu
+                        ,closeMenu: closeMenu
                         ,togglePause: togglePause};
    return _elm.Update.values;
 };Elm.Interface = Elm.Interface || {};
@@ -775,6 +1104,7 @@ Elm.Interface.make = function (_elm) {
                    ,"g: gulp some beer"
                    ,"c: chug beer (slam back a brewski)"
                    ,"u: urinate"
+                   ,"o: order another beer"
                    ,"ctrl + w: win game"
                    ,"clickar buttons: self explanatory"
                    ,"p: pause game"])));
@@ -791,7 +1121,7 @@ Elm.Interface.make = function (_elm) {
            ,_0: A3(Graphics.Input.button,
            order.handle,
            {ctor: "_Tuple0"},
-           "order more beer")
+           "another pint, please")
            ,_1: order.signal},
    orderButton = $._0,
    orderClicks = $._1;
@@ -872,47 +1202,37 @@ Elm.Interface.make = function (_elm) {
       Signal.count(Keyboard.isDown(code)))));
    };
    var keyPressed = function ($char) {
-      return A2(Signal._op["<~"],
-      function (_v6) {
-         return function () {
-            return {ctor: "_Tuple0"};
-         }();
-      },
-      Signal.dropRepeats(A2(Signal._op["<~"],
-      function (n) {
-         return n / 2 | 0;
-      },
-      Signal.count(Keyboard.isDown(Char.toCode($char))))));
+      return keyCodePressed(Char.toCode($char));
    };
    var makeButtons = F3(function (initial,
    dimensions,
    names) {
       return function () {
          var inputs = A2(List.map,
-         function (_v8) {
+         function (_v6) {
             return function () {
                return Graphics.Input.input(initial);
             }();
          },
          names);
          var elems = A2(List.map,
-         function (_v10) {
+         function (_v8) {
             return function () {
-               switch (_v10.ctor)
+               switch (_v8.ctor)
                {case "_Tuple2":
                   return A5(Graphics.Input.customButton,
-                    _v10._0.handle,
-                    _v10._1,
+                    _v8._0.handle,
+                    _v8._1,
                     A3(box,
-                    _v10._1,
+                    _v8._1,
                     dimensions,
                     Color.white),
                     A3(box,
-                    _v10._1,
+                    _v8._1,
                     dimensions,
                     Color.lightGrey),
                     A3(box,
-                    _v10._1,
+                    _v8._1,
                     dimensions,
                     Color.grey));}
                _E.Case($moduleName,
@@ -946,24 +1266,24 @@ Elm.Interface.make = function (_elm) {
    },
    timeAcceleration);
    var render = F3(function (state,
-   _v14,
+   _v12,
    seed) {
       return function () {
-         switch (_v14.ctor)
+         switch (_v12.ctor)
          {case "_Tuple2":
             return A2(Graphics.Element.flow,
               Graphics.Element.outward,
               _L.fromArray([instructions
                            ,A4(Graphics.Element.container,
-                           _v14._0,
-                           _v14._1,
+                           _v12._0,
+                           _v12._1,
                            Graphics.Element.bottomLeft,
                            Text.plainText(_L.append("random seed: ",
                            String.show(seed))))
                            ,SpecialEffects.theBest(A3(Model.Environment,
                            {ctor: "_Tuple2"
-                           ,_0: _v14._0
-                           ,_1: _v14._1},
+                           ,_0: _v12._0
+                           ,_1: _v12._1},
                            state,
                            Basics.toFloat(state.frames)))(A2(Graphics.Element.flow,
                            Graphics.Element.down,
@@ -984,6 +1304,11 @@ Elm.Interface.make = function (_elm) {
                                         Graphics.Element.right,
                                         _L.fromArray([Text.plainText("your current beer of choice is ")
                                                      ,Text.plainText(String.show(Basics.snd(state.person.beers).name))]))
+                                        ,A2(Graphics.Element.flow,
+                                        Graphics.Element.right,
+                                        _L.fromArray([Text.plainText("of which you have ")
+                                                     ,Text.plainText(String.show(Basics.fst(state.person.beers)))
+                                                     ,Text.plainText(" ml left in the glass")]))
                                         ,A2(Graphics.Element.flow,
                                         Graphics.Element.right,
                                         _L.fromArray([Text.plainText("you got ")
@@ -1010,9 +1335,21 @@ Elm.Interface.make = function (_elm) {
                                         Graphics.Element.right,
                                         _L.fromArray([sipButton
                                                      ,gulpButton
-                                                     ,urinateButton]))])))]));}
+                                                     ,urinateButton]))
+                                        ,A2(Graphics.Element.flow,
+                                        Graphics.Element.right,
+                                        _L.fromArray([orderButton]))
+                                        ,Graphics.Element.flow(Graphics.Element.down)(A2(List.map,
+                                        function ($) {
+                                           return Text.plainText(function (_) {
+                                              return _.msg;
+                                           }($));
+                                        },
+                                        A2(List.take,
+                                        5,
+                                        state.messages)))])))]));}
          _E.Case($moduleName,
-         "between lines 65 and 76");
+         "between lines 66 and 80");
       }();
    });
    _elm.Interface.values = {_op: _op
@@ -1524,6 +1861,12 @@ Elm.Model.make = function (_elm) {
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
    var _op = {};
+   var Message = F2(function (a,
+   b) {
+      return {_: {}
+             ,msg: a
+             ,timeout: b};
+   });
    var GameState = F2(function (a,
    b) {
       return {_: {}
@@ -1573,14 +1916,16 @@ Elm.Model.make = function (_elm) {
              ,weight: c
              ,wetSelf: g};
    });
-   var State = F4(function (a,
+   var State = F5(function (a,
    b,
    c,
-   d) {
+   d,
+   e) {
       return {_: {}
              ,drinks: b
              ,elapsed: c
              ,frames: d
+             ,messages: e
              ,person: a};
    });
    var PremiumBitter = {ctor: "PremiumBitter"};
@@ -1597,7 +1942,8 @@ Elm.Model.make = function (_elm) {
                        ,Beer: Beer
                        ,Score: Score
                        ,Environment: Environment
-                       ,GameState: GameState};
+                       ,GameState: GameState
+                       ,Message: Message};
    return _elm.Model.values;
 };Elm.Signal = Elm.Signal || {};
 Elm.Signal.InputGroups = Elm.Signal.InputGroups || {};
