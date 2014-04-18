@@ -1,5 +1,6 @@
 module Menu where
 
+import Model
 import BeerList
 
 data Zipper x = Zipper [x] x [x]
@@ -27,25 +28,25 @@ fromList (x::xs) = Zipper [] x xs
 toList : Zipper x -> [x]
 toList (Zipper a x b) = reverse a ++ [x] ++ b
 
-type Menu = {title: String, items: Zipper String}
+type Menu a = {title : String, items : Zipper a}
 
-menu : Menu
-menu = Menu "Beer Menu" <| fromList <| map .name  BeerList.allBeers
+menu : Menu Model.Beer
+menu = Menu "Beer Menu" <| fromList BeerList.allBeers
 
-update : (Menu -> Menu) -> Menu -> Menu
+update : (Menu a -> Menu a) -> Menu a -> Menu a
 update step menu = step menu
 
-moveUp : a -> Menu -> Menu
+moveUp : a -> Menu b -> Menu b
 moveUp _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| left menu.items}
 
-moveDown : a -> Menu -> Menu
+moveDown : a -> Menu b -> Menu b
 moveDown _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| right menu.items}
 
-render : Menu -> (Int, Int) -> Element
-render {title, items} (w, h) =
+render : (a -> String) -> Menu a -> (Int, Int) -> Element
+render toString {title, items} (w, h) =
     let choices = container w h middle
-                    <| flow down . map (container w 40 middle) <| map plainText (reverse <| getLeft items)
-                    ++ [color lightGrey . plainText . select <| items]
-                    ++ map plainText (getRight items)
+                    <| flow down . map (container w 40 middle) <| map (plainText . toString) (reverse <| getLeft items)
+                    ++ [color lightGrey . plainText . toString . select <| items]
+                    ++ map (plainText . toString) (getRight items)
         heading = container w h midTop . centered . Text.height 40 . bold . toText <| title
     in  layers [choices, heading]

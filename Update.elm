@@ -77,7 +77,10 @@ updateGameState : (Model.GameState -> Model.GameState) -> Model.GameState -> Mod
 updateGameState step state = step state
 
 toggleMenu : a -> Model.GameState -> Model.GameState
-toggleMenu _ state = {state| menuOpen <- not state.menuOpen }
+toggleMenu _ state = {state| menuOpen <- not state.menuOpen}
+
+closeMenu : a -> Model.GameState -> Model.GameState
+closeMenu _ state = {state| menuOpen <- False}
 
 togglePause : a -> Model.GameState -> Model.GameState
 togglePause _ state = if state.menuOpen then state else {state| paused <- not state.paused}

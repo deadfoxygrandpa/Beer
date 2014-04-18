@@ -62,13 +62,14 @@ initialGameState = Model.GameState False False
 gameStateUpdates : Signal (Model.GameState -> Model.GameState)
 gameStateUpdates = merges [ Update.togglePause <~ (Interface.keyPressed 'P')
                           , Update.toggleMenu  <~ (Interface.keyCodePressed 27)
+                          , Update.closeMenu   <~ (Interface.keyCodePressed 13)
                           ]
 
 gameStateSignal : Signal Model.GameState
 gameStateSignal = foldp Update.updateGameState initialGameState gameStateUpdates
 
-inputGroup = InputGroups.makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~ gameStateSignal)
-updates' = inputGroup.add updates (Update.emptyFrame 0, 0)
+gameGroup = InputGroups.makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~ gameStateSignal)
+updates' = gameGroup.add updates (Update.emptyFrame 0, 0)
 
 gameScreen : Signal Element
 gameScreen = Interface.render <~ stateSignal
@@ -77,16 +78,22 @@ gameScreen = Interface.render <~ stateSignal
 
 initialMenu = Menu.menu
 
-menuUpdates : Signal (Menu.Menu -> Menu.Menu)
+menuGroup = InputGroups.makeGroup (.menuOpen <~ gameStateSignal)
+menuUpdates' = menuGroup.add menuUpdates id
+
+menuUpdates : Signal (Menu.Menu Model.Beer -> Menu.Menu Model.Beer)
 menuUpdates = merges [ Menu.moveUp <~ Interface.keyCodePressed 38
                      , Menu.moveDown <~ Interface.keyCodePressed 40
                      ]
 
-menuSignal : Signal Menu.Menu
-menuSignal = foldp Menu.update initialMenu menuUpdates
+menuSignal : Signal (Menu.Menu Model.Beer)
+menuSignal = foldp Menu.update initialMenu menuUpdates'
+
+currentBeer : Signal Model.Beer
+currentBeer = Menu.select . .items <~ (sampleOn (menuGroup.add (Interface.keyCodePressed 13) ()) menuSignal)
 
 menuScreen : Signal Element
-menuScreen = Menu.render <~ menuSignal ~ Window.dimensions
+menuScreen = Menu.render .name <~ menuSignal ~ Window.dimensions
 
 main : Signal Element
 main = (\g m x -> if x then m else g) <~ gameScreen ~ menuScreen ~ (.menuOpen <~ gameStateSignal)
