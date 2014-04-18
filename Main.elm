@@ -34,7 +34,7 @@ initialPerson : Model.Person
 initialPerson = Model.Person Model.Male 0 80 0 0 False False (355, badBeer)
 
 initialState : Model.State
-initialState = Model.State (fst <| Randomize.person gen) 0 0 0
+initialState = Model.State (fst <| Randomize.person gen) 0 0 0 [Model.Message "Bartender: welcome" 5]
 
 time : Signal Time
 time = sampleOn frames Interface.timeFactor
@@ -49,6 +49,8 @@ updates =
                       , Update.gulp <~ (sampleOn Interface.gulpClicks time)
                       , Update.urinate <~ (sampleOn Interface.urinateClicks time)
                       , Update.urinate <~ (sampleOn (Interface.keyPressed 'U') time)
+                      , Update.orderAnother <~ Interface.orderClicks
+                      , Update.orderAnother <~ (Interface.keyPressed 'O')
                       , Update.emptyFrame <~ time
                       ]
     in  (,) <~ step ~ time

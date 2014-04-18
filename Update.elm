@@ -22,7 +22,11 @@ drank person bac =
 updateState : ((Model.State -> Model.State), Time) -> Model.State -> Model.State
 updateState (step, timeStep) state =
     let state' = step state
-    in  {state'| elapsed <- state.elapsed + timeStep, person <- process timeStep state'.person, frames <- state.frames + 1}
+        messages' = filter (\msg -> msg.timeout > 0) . map (\{msg, timeout} -> Model.Message msg (timeout - timeStep * 3600)) <| state'.messages
+    in  {state'| elapsed <- state.elapsed + timeStep
+               , person <- process timeStep state'.person
+               , frames <- state.frames + 1
+               , messages <- messages'}
 
 emptyFrame : a -> Model.State -> Model.State
 emptyFrame _ state = state
@@ -30,10 +34,11 @@ emptyFrame _ state = state
 consume : Float -> Float -> Model.State -> Model.State
 consume rate timeStep state =
     let consume' rate t person =
-            let volume = rate * t
+            let (remaining, beer) = person.beers
+                volume = clamp 0 remaining <| rate * t
                 alcVolume = volume * ((snd person.beers).abv / 100)
                 grams = Constants.ethanolDensity * alcVolume
-            in ({person| alc <- person.alc + grams}, volume)
+            in ({person| alc <- person.alc + grams, beers <- (remaining - volume, beer)}, volume)
         (person, volume) = consume' rate timeStep state.person
     in  {state| person <- person, drinks <- state.drinks + (volume / 355)}
 
@@ -51,6 +56,18 @@ urinate _ state = if (state.person.urine < 10) then state else
     let person = state.person
         person' = {person| urinating <- True}
     in  {state| person <- person'}
+
+order : Model.Beer -> Model.State -> Model.State
+order beer state = if (fst state.person.beers) > 10 then addMessage "Bartender: finish that one first!" 5 state else
+    let person = state.person
+        person' = {person| beers <- (355, beer)}
+    in  addMessage "Bartender: enjoy!" 5 {state| person <- person'}
+
+orderAnother : a -> Model.State -> Model.State
+orderAnother _ state = order (snd state.person.beers) state
+
+addMessage : String -> Time -> Model.State -> Model.State
+addMessage s t state = {state| messages <- Model.Message s t :: state.messages}
 
 process : Float -> Model.Person -> Model.Person
 process timeStep person =
