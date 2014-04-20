@@ -99,5 +99,8 @@ toggleMenu _ state = {state| menuOpen <- not state.menuOpen}
 closeMenu : a -> Model.GameState -> Model.GameState
 closeMenu _ state = {state| menuOpen <- False}
 
+openMenu : a -> Model.GameState -> Model.GameState
+openMenu _ state = {state| menuOpen <- True}
+
 togglePause : a -> Model.GameState -> Model.GameState
 togglePause _ state = if state.menuOpen then state else {state| paused <- not state.paused}

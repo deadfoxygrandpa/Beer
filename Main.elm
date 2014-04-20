@@ -50,7 +50,8 @@ updates =
                       , Update.urinate <~ (sampleOn Interface.urinateClicks time)
                       , Update.urinate <~ (sampleOn (Interface.keyPressed 'U') time)
                       , Update.orderAnother <~ Interface.orderClicks
-                      , Update.orderAnother <~ (Interface.keyPressed 'O')
+                      , Update.orderAnother <~ (Interface.keyPressed 'A')
+                      , Update.order <~ (delay 2 currentBeer)
                       , Update.emptyFrame <~ time
                       ]
     in  (,) <~ step ~ time
@@ -63,8 +64,10 @@ initialGameState = Model.GameState False False
 
 gameStateUpdates : Signal (Model.GameState -> Model.GameState)
 gameStateUpdates = merges [ Update.togglePause <~ (Interface.keyPressed 'P')
-                          , Update.toggleMenu  <~ (Interface.keyCodePressed 27)
-                          , Update.closeMenu   <~ (Interface.keyCodePressed 13)
+                          , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 27)
+                          , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 13)
+                          , Update.openMenu    <~ Interface.orderClicks2
+                          , Update.openMenu    <~ (Interface.keyPressed 'O')
                           ]
 
 gameStateSignal : Signal Model.GameState
@@ -74,7 +77,7 @@ gameGroup = InputGroups.makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~
 updates' = gameGroup.add updates (Update.emptyFrame 0, 0)
 
 gameScreen : Signal Element
-gameScreen = Interface.render <~ stateSignal
+gameScreen = Interface.render <~ (sampleOn frames stateSignal)
                                ~ Window.dimensions
                                ~ (constant seed)
 
