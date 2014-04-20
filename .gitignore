@@ -6,5 +6,7 @@ build/
 cache/
 elm_dependencies/
 docs/
+node_modules/
 *.elmo
 *.elmi
+*.js
