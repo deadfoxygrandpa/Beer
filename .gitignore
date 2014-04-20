@@ -5,3 +5,5 @@
 build/
 cache/
 elm_dependencies/
+docs/
+node_modules/
