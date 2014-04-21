@@ -70,13 +70,13 @@ render state (w, h) seed =
     let messages   = container w h (midTopAt (relative 0.5) (relative 0.7)) <| flow down <| map (plainText . .msg) (take 5 state.messages)
         gameScreen = container w h middle <|
                      flow down [ flow right [chugButton, plainText " time acceleration: ", flow right timeAccelerationButtons]
-                               , flow right [plainText "you are an ", plainText . show <| state.person.weight, plainText "kg ", plainText . show <| state.person.sex]
+                               , flow right [plainText "you are a ", plainText . String.left 5 . show <| state.person.weight, plainText "kg ", plainText . show <| state.person.sex]
                                , flow right [plainText "your current beer of choice is ", plainText . show <| (snd state.person.beers).name]
-                               , flow right [plainText "of which you have ", plainText . show <| fst state.person.beers, plainText " ml left in the glass"]
+                               , flow right [plainText "of which you have ", width 35 <| plainText . show <| fst state.person.beers, plainText " ml left in the glass"]
                                , flow right [plainText "you got ", plainText . String.left 4 . show <| state.person.alc, plainText " grams of unabsorbed ethanol in ur belly"]
                                , flow right [plainText "ur bac is: ", plainText . String.left 6 . show <| state.person.bac]
                                , plainText <| peeDisplay state.person.urine state.person.wetSelf ++ (if state.person.urinating then " (you are peeing)" else "")
-                               , flow right [plainText "you've had ", plainText . show <| state.drinks, plainText " beers"]
+                               , flow right [plainText "you've had ", plainText . String.left 4 . show <| state.drinks, plainText " beers"]
                                , flow right [plainText "u been at the bar for: ", plainText <| timeDisplay state.elapsed]
                                , flow right [sipButton, gulpButton, urinateButton]
                                , flow right [orderButton, orderButton2]
