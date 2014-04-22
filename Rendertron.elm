@@ -1,24 +1,26 @@
 module Rendertron where
 
+import Model
+
 import Automaton (..)
 import Automaton
 
-type State = {name : String, content : String}
-type HiddenState a = {input : a, output : Element}
+type Rendertron = Automaton Model.State Element
+type HiddenState a = {input : a, render : a -> Element, output : Element}
 
-renderName : Automaton State Element
-renderName = hiddenState (HiddenState "" <| plainText "") (\input state -> if input.name == state.input then (state, state.output) else let x = plainText input.name in (HiddenState input.name <| x, x))
+rendertron : (Model.State -> a) -> (a -> Element) -> Model.State -> Rendertron
+rendertron getter renderer state =
+    let a = getter state
+        state' = HiddenState a renderer <| renderer a
+        step i s =  let a = getter i
+                    in  if a == s.input
+                        then (s, s.output)
+                        else let o = renderer a
+                             in  ({s| input <- a, output <- o}, o)
+    in  hiddenState state' step
 
-renderContent : Automaton State Element
-renderContent = hiddenState (HiddenState "" <| plainText "") (\input state -> if input.content == state.input then (state, state.output) else let x = plainText input.content in (HiddenState input.content <| x, x))
+renderer : [Rendertron] -> Automaton Model.State [Element]
+renderer rendertrons = Automaton.combine rendertrons
 
-renderer : Automaton State [Element]
-renderer = Automaton.combine [renderName, renderContent]
-
-render : Signal State -> Signal Element
-render state = flow down <~ (run renderer [spacer 0 0] state)
-
-state : State
-state = State "name" "content"
-
-main = (sampleOn (fps 1000) (constant <| plainText "welp,"))
+renderLines : Automaton Model.State [Element] -> Signal Model.State -> Signal Element
+renderLines renderer state = flow down <~ run renderer [] state

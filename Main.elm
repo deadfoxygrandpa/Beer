@@ -13,6 +13,7 @@ import Constants
 import BeerList
 import Randomize
 import Menu
+import Rendertron
 
 -- Catalog imports
 import Generator
@@ -101,4 +102,46 @@ menuScreen : Signal Element
 menuScreen = Menu.render .name <~ menuSignal ~ Window.dimensions
 
 main : Signal Element
-main = (\g m x -> if x then m else g) <~ gameScreen ~ menuScreen ~ (.menuOpen <~ gameStateSignal)
+main = (\g m x -> if x then m else g) <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal)
+
+-- Rendertrons:
+
+lines : [Rendertron.Rendertron]
+lines =
+    [ Rendertron.rendertron (\state -> ())
+        (\_ -> flow right [Interface.chugButton, plainText " time acceleration: ", flow right Interface.timeAccelerationButtons])
+        initialState
+    , Rendertron.rendertron (\state -> (state.person.weight, state.person.sex))
+        (\(weight, sex) -> flow right [plainText "you are a ", plainText . String.left 5 . show <| weight, plainText "kg ", plainText . show <| sex])
+        initialState
+    , Rendertron.rendertron (\state -> .name (snd state.person.beers))
+        (\name -> flow right [plainText "your current beer of choice is ", plainText . show <| name])
+        initialState
+    , Rendertron.rendertron (\state -> fst <| state.person.beers)
+        (\beer -> flow right [plainText "of which you have ", width 35 <| plainText . show <| beer, plainText " ml left in the glass"])
+        initialState
+    , Rendertron.rendertron (\state -> state.person.alc)
+        (\alc -> flow right [plainText "you got ", plainText . String.left 4 . show <| alc, plainText " grams of unabsorbed ethanol in ur belly"])
+        initialState
+    , Rendertron.rendertron (\state -> state.person.bac)
+        (\bac -> flow right [plainText "ur bac is: ", plainText . String.left 6 . show <| bac])
+        initialState
+    , Rendertron.rendertron (\state -> (state.person.urine, state.person.wetSelf, state.person.urinating))
+        (\(urine, wetSelf, urinating) -> plainText <| Interface.peeDisplay urine wetSelf ++ (if urinating then " (you are peeing)" else ""))
+        initialState
+    , Rendertron.rendertron (\state -> state.drinks)
+        (\drinks -> flow right [plainText "you've had ", plainText . String.left 4 . show <| drinks, plainText " beers"])
+        initialState
+    ,  Rendertron.rendertron (\state -> state.elapsed)
+        (\elapsed -> flow right [plainText "u been at the bar for: ", plainText <| Interface.timeDisplay elapsed])
+        initialState
+    ,  Rendertron.rendertron (\state -> ())
+        (\_ -> flow right [Interface.sipButton, Interface.gulpButton, Interface.urinateButton])
+        initialState
+    ,  Rendertron.rendertron (\state -> ())
+        (\_ -> flow right [Interface.orderButton, Interface.orderButton2])
+        initialState
+    ]
+
+gameScreen2 : Signal Element
+gameScreen2 = (\elem (w, h) -> container w h middle elem) <~ (Rendertron.renderLines (Rendertron.renderer lines) stateSignal) ~ Window.dimensions
