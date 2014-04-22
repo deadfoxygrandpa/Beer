@@ -1,6 +1,6 @@
 module Constants where
 
-framerate = 10
+framerate = 30
 
 -- grams per millileter
 ethanolDensity = 0.789
@@ -9,5 +9,5 @@ ethanolDensity = 0.789
 absorptionRate = 40
 gulpRate = 25 * 3600
 sipRate = 5 * 3600
-chugRate = 355 * 10 * 3600
+chugRate = 355 * 1000 * 3600
 urinationRate = 10 * 3600
