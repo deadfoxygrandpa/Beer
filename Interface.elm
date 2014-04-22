@@ -46,8 +46,8 @@ order2 = Input.input ()
 (orderButton, orderClicks)     = (Input.button order.handle   () "another pint, please", order.signal)
 (orderButton2, orderClicks2)   = (Input.button order2.handle  () "order from the menu" , order2.signal)
 
-timeFactor : Signal Time
-timeFactor = (\x -> inHours (1000 * (maybe 1 id <| String.toFloat x) / Constants.framerate)) <~ timeAcceleration
+timeFactor : Signal Time -> Signal Time
+timeFactor time = (\x t -> inHours (1000 * (maybe 1 id <| String.toFloat x) / (1000 / t))) <~ timeAcceleration ~ time
 
 instructions : Element
 instructions =

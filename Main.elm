@@ -19,6 +19,7 @@ import Rendertron
 import Generator
 import Generator.Standard
 import Signal.InputGroups as InputGroups
+import Automaton
 
 frames : Signal Time
 frames = fps Constants.framerate
@@ -38,7 +39,7 @@ initialState : Model.State
 initialState = Model.State (fst <| Randomize.person gen) 0 0 0 [Model.Message "Bartender: welcome" 5]
 
 time : Signal Time
-time = sampleOn frames Interface.timeFactor
+time = Interface.timeFactor frames
 
 updates : Signal ((Model.State -> Model.State), Time)
 updates =
@@ -102,7 +103,7 @@ menuScreen : Signal Element
 menuScreen = Menu.render .name <~ menuSignal ~ Window.dimensions
 
 main : Signal Element
-main = (\g m x -> if x then m else g) <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal)
+main = (\g m x t -> if x then layers [m, color red <| spacer 5 (round t)] else layers [g, color red <| spacer 5 (round t)]) <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal) ~ (sampleOn (fps 10) feeps)
 
 -- Rendertrons:
 
@@ -148,3 +149,5 @@ lines =
 
 gameScreen2 : Signal Element
 gameScreen2 = Rendertron.renderGame seed (Rendertron.renderer lines) stateSignal Window.dimensions
+
+feeps = Automaton.run (Automaton.average 1) 0 ((\t -> 1000 / (hour * t)) <~ time)
