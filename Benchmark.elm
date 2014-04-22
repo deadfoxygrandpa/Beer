@@ -40,21 +40,65 @@ initialGameState = Model.GameState False False
 initialMenu : Menu.Menu Model.Beer
 initialMenu = Menu.menu
 
+lines : [Rendertron.Rendertron]
+lines =
+    [ Rendertron.rendertron (\state -> state.messages)
+        (\messages -> flow down <| map (plainText . .msg) messages)
+        initialState
+    , Rendertron.rendertron (\state -> ())
+        (\_ -> flow right [Interface.chugButton, plainText " time acceleration: ", flow right Interface.timeAccelerationButtons])
+        initialState
+    , Rendertron.rendertron (\state -> (state.person.weight, state.person.sex))
+        (\(weight, sex) -> flow right [plainText "you are a ", plainText . String.left 5 . show <| weight, plainText "kg ", plainText . show <| sex])
+        initialState
+    , Rendertron.rendertron (\state -> .name (snd state.person.beers))
+        (\name -> flow right [plainText "your current beer of choice is ", plainText . show <| name])
+        initialState
+    , Rendertron.rendertron (\state -> fst <| state.person.beers)
+        (\beer -> flow right [plainText "of which you have ", width 35 <| plainText . show <| beer, plainText " ml left in the glass"])
+        initialState
+    , Rendertron.rendertron (\state -> state.person.alc)
+        (\alc -> flow right [plainText "you got ", plainText . String.left 4 . show <| alc, plainText " grams of unabsorbed ethanol in ur belly"])
+        initialState
+    , Rendertron.rendertron (\state -> state.person.bac)
+        (\bac -> flow right [plainText "ur bac is: ", plainText . String.left 6 . show <| bac])
+        initialState
+    , Rendertron.rendertron (\state -> (state.person.urine, state.person.wetSelf, state.person.urinating))
+        (\(urine, wetSelf, urinating) -> plainText <| Interface.peeDisplay urine wetSelf ++ (if urinating then " (you are peeing)" else ""))
+        initialState
+    , Rendertron.rendertron (\state -> state.drinks)
+        (\drinks -> flow right [plainText "you've had ", plainText . String.left 4 . show <| drinks, plainText " beers"])
+        initialState
+    ,  Rendertron.rendertron (\state -> state.elapsed)
+        (\elapsed -> flow right [plainText "u been at the bar for: ", plainText <| Interface.timeDisplay elapsed])
+        initialState
+    ,  Rendertron.rendertron (\state -> ())
+        (\_ -> flow right [Interface.sipButton, Interface.gulpButton, Interface.urinateButton])
+        initialState
+    ,  Rendertron.rendertron (\state -> ())
+        (\_ -> flow right [Interface.orderButton, Interface.orderButton2])
+        initialState
+    ]
+
+renderer = Rendertron.renderer lines
+
+step5 : Automaton.Automaton i o -> [i] -> o
+step5 aut is =
+    let (aut1, is1) = (fst <| Automaton.step (head is) aut, tail is)
+        (aut2, is2) = (fst <| Automaton.step (head is1) aut1, tail is1)
+        (aut3, is3) = (fst <| Automaton.step (head is2) aut2, tail is2)
+        (aut4, is4) = (fst <| Automaton.step (head is3) aut3, tail is3)
+        (aut5, o) = Automaton.step (head is4) aut4
+    in o
 
 port rendertron : () -> ()
-port rendertron = \_ -> discard <| Automaton.step Rendertron.state Rendertron.renderer
-
-port rendertron1 : () -> ()
-port rendertron1 = \_ -> discard <| Automaton.step (Rendertron.State "name" "") Rendertron.renderer
+port rendertron = \_ -> discard <| step5 renderer (map (\x -> {initialState| elapsed <- x}) [0..5])
 
 port rendertron2 : () -> ()
-port rendertron2 = \_ -> discard <| Automaton.step (Rendertron.State "" "") Rendertron.renderer
+port rendertron2 = \_ -> discard <| step5 renderer (map (\x -> {initialState| elapsed <- x}) (repeat 5 0))
 
-port rendertron3 : () -> ()
-port rendertron3 = \_ -> discard <| flow down [plainText "name", plainText "content"]
-
-port rendertron4 : () -> ()
-port rendertron4 = \_ -> discard <| flow down [plainText "", plainText ""]
+port rendertronnop : () -> ()
+port rendertronnop = \_ -> discard <| map (\x -> Interface.gameScreen initialState (x, x)) (repeat 5 100)
 
 port sip : () -> ()
 port sip = \_ -> discard <| Update.updateState ((Update.sip 5), 5) initialState

@@ -77,10 +77,10 @@ gameStateSignal = foldp Update.updateGameState initialGameState gameStateUpdates
 gameGroup = InputGroups.makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~ gameStateSignal)
 updates' = gameGroup.add updates (Update.emptyFrame 0, 0)
 
-gameScreen : Signal Element
-gameScreen = Interface.render <~ (sampleOn frames stateSignal)
-                               ~ Window.dimensions
-                               ~ (constant seed)
+--gameScreen : Signal Element
+--gameScreen = Interface.render <~ (sampleOn frames stateSignal)
+--                               ~ Window.dimensions
+--                               ~ (constant seed)
 
 initialMenu = Menu.menu
 
@@ -108,7 +108,10 @@ main = (\g m x -> if x then m else g) <~ gameScreen2 ~ menuScreen ~ (.menuOpen <
 
 lines : [Rendertron.Rendertron]
 lines =
-    [ Rendertron.rendertron (\state -> ())
+    [ Rendertron.rendertron (\state -> state.messages)
+        (\messages -> flow down <| map (plainText . .msg) messages)
+        initialState
+    , Rendertron.rendertron (\state -> ())
         (\_ -> flow right [Interface.chugButton, plainText " time acceleration: ", flow right Interface.timeAccelerationButtons])
         initialState
     , Rendertron.rendertron (\state -> (state.person.weight, state.person.sex))
@@ -132,8 +135,8 @@ lines =
     , Rendertron.rendertron (\state -> state.drinks)
         (\drinks -> flow right [plainText "you've had ", plainText . String.left 4 . show <| drinks, plainText " beers"])
         initialState
-    ,  Rendertron.rendertron (\state -> state.elapsed)
-        (\elapsed -> flow right [plainText "u been at the bar for: ", plainText <| Interface.timeDisplay elapsed])
+    ,  Rendertron.rendertron (\state -> Interface.timeDisplay state.elapsed)
+        (\elapsed -> flow right [plainText "u been at the bar for: ", plainText elapsed])
         initialState
     ,  Rendertron.rendertron (\state -> ())
         (\_ -> flow right [Interface.sipButton, Interface.gulpButton, Interface.urinateButton])
@@ -144,4 +147,4 @@ lines =
     ]
 
 gameScreen2 : Signal Element
-gameScreen2 = (\elem (w, h) -> container w h middle elem) <~ (Rendertron.renderLines (Rendertron.renderer lines) stateSignal) ~ Window.dimensions
+gameScreen2 = Rendertron.renderGame seed (Rendertron.renderer lines) stateSignal Window.dimensions
