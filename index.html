@@ -179,7 +179,7 @@ Elm.Main.make = function (_elm)
                                                                                      Text.plainText("kg "),
                                                                                      Text.plainText(String.show(_v2._1))]));}
                                                           _E.Case($moduleName,
-                                                                  "on line 119, column 28 to 149");
+                                                                  "on line 122, column 28 to 149");
                                                         }();
                                                },
                                                initialState),
@@ -257,7 +257,7 @@ Elm.Main.make = function (_elm)
                                                                                                 _v6._1),
                                                                                              _v6._2 ? " (you are peeing)" : ""));}
                                                           _E.Case($moduleName,
-                                                                  "on line 134, column 42 to 139");
+                                                                  "on line 137, column 42 to 139");
                                                         }();
                                                },
                                                initialState),
@@ -427,6 +427,12 @@ Elm.Main.make = function (_elm)
                                      return _.menuOpen;
                                    },
                                    gameStateSignal));
+                  var title = Native.Ports.portOut("title",
+                                                   function (v)
+                                                   {
+                                                     return v;
+                                                   },
+                                                   "Beer");
                   _elm.Main.values = {_op: _op, frames: frames, badBeer: badBeer, gen: gen, initialPerson: initialPerson, initialState: initialState, time: time, updates: updates, stateSignal: stateSignal, initialGameState: initialGameState, gameStateUpdates: gameStateUpdates, gameStateSignal: gameStateSignal, gameGroup: gameGroup, updates$: updates$, initialMenu: initialMenu, menuGroup: menuGroup, menuUpdates$: menuUpdates$, menuUpdates: menuUpdates, menuSignal: menuSignal, currentBeer: currentBeer, menuScreen: menuScreen, main: main, lines: lines, gameScreen2: gameScreen2};
                   return _elm.Main.values;
                 };Elm.Rendertron = Elm.Rendertron || {};
