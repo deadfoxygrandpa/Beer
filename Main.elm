@@ -4,6 +4,7 @@ module Main where
 import Window
 import Keyboard
 import Char
+import Graphics.Input as Input
 
 -- Project imports
 import Interface
@@ -102,15 +103,18 @@ menuSignal = foldp Menu.update initialMenu menuUpdates'
 currentBeer : Signal Model.Beer
 currentBeer = Menu.select . .items <~ (sampleOn (menuGroup.add (Interface.keyCodePressed 13) ()) menuSignal)
 
+beerInput : Input.Input Model.Beer
+beerInput = Input.input (snd initialState.person.beers)
+
 menuScreen : Signal Element
-menuScreen = Menu.render .name <~ menuSignal ~ Window.dimensions
+menuScreen = Menu.render beerInput .name <~ menuSignal ~ Window.dimensions
 
 fpsBar : Signal Element
 fpsBar = (\w t -> color red <| spacer (clamp 0 w . round <| t / Constants.framerate * (toFloat w)) 2) <~ Window.width ~ feeps
 
 main : Signal Element
-main = (\g m x b -> if x then layers [m, b] else layers [g, b])
-    <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal) ~ fpsBar
+main = (\g m x b i -> if x then layers [m, b, asText i] else layers [g, b, asText i])
+    <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal) ~ fpsBar ~ beerInput.signal
 
 -- Rendertrons:
 

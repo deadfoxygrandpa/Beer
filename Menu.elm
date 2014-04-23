@@ -1,5 +1,7 @@
 module Menu where
 
+import Graphics.Input as Input
+
 import Model
 import BeerList
 
@@ -42,11 +44,12 @@ moveUp _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| left 
 moveDown : a -> Menu b -> Menu b
 moveDown _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| right menu.items}
 
-render : (a -> String) -> Menu a -> (Int, Int) -> Element
-render toString {title, items} (w, h) =
-    let choices = container w h middle
-                    <| flow down . map (container w 40 middle) <| map (plainText . toString) (reverse <| getLeft items)
-                    ++ [color lightGrey . plainText . toString . select <| items]
-                    ++ map (plainText . toString) (getRight items)
+render : Input.Input a -> (a -> String) -> Menu a -> (Int, Int) -> Element
+render clicker toString {title, items} (w, h) =
+    let choice item = Input.button clicker.handle item . toString <| item
+        choices = container w h middle
+                    <| flow down . map (container w 40 middle) <| map (choice) (reverse <| getLeft items)
+                    ++ [color lightGrey . choice . select <| items]
+                    ++ map choice (getRight items)
         heading = container w h midTop . centered . Text.height 40 . bold . toText <| title
     in  layers [choices, heading]
