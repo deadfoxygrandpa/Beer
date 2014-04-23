@@ -22,7 +22,7 @@ import Signal.InputGroups as InputGroups
 import Automaton
 
 frames : Signal Time
-frames = fps Constants.framerate
+frames = gameGroup.add (fps Constants.framerate) 0
 
 badBeer : Model.Beer
 badBeer = BeerList.tsingtao
@@ -102,8 +102,12 @@ currentBeer = Menu.select . .items <~ (sampleOn (menuGroup.add (Interface.keyCod
 menuScreen : Signal Element
 menuScreen = Menu.render .name <~ menuSignal ~ Window.dimensions
 
+fpsBar : Signal Element
+fpsBar = (\w t -> color red <| spacer (clamp 0 w . round <| t / Constants.framerate * (toFloat w)) 2) <~ Window.width ~ feeps
+
 main : Signal Element
-main = (\g m x t -> if x then layers [m, color red <| spacer 5 (round t)] else layers [g, color red <| spacer 5 (round t)]) <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal) ~ (sampleOn (fps 10) feeps)
+main = (\g m x b -> if x then layers [m, b] else layers [g, b])
+    <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal) ~ fpsBar
 
 -- Rendertrons:
 
@@ -150,4 +154,4 @@ lines =
 gameScreen2 : Signal Element
 gameScreen2 = Rendertron.renderGame seed (Rendertron.renderer lines) stateSignal Window.dimensions
 
-feeps = Automaton.run (Automaton.average 1) 0 ((\t -> 1000 / (hour * t)) <~ time)
+feeps = Automaton.run (Automaton.average 30) 0 ((\t -> 1000 / t) <~ (fps Constants.framerate))
