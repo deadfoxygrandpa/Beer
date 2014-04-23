@@ -21,6 +21,9 @@ import Generator.Standard
 import Signal.InputGroups as InputGroups
 import Automaton
 
+port title : String
+port title = "Beer"
+
 frames : Signal Time
 frames = gameGroup.add (fps Constants.framerate) 0
 
