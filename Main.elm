@@ -108,8 +108,18 @@ currentBeer = merge (Menu.select . .items <~ (sampleOn (menuGroup.add (Interface
 beerInput : Input.Input Model.Beer
 beerInput = Input.input (snd initialState.person.beers)
 
+quality : Model.Score -> String
+quality score = if | score.styleScore > 95 -> " perfect "
+                   | score.styleScore > 85 -> "n excellent "
+                   | score.styleScore > 75 -> " good "
+                   | score.styleScore > 50 -> "n average "
+                   | otherwise             -> " terrible "
+
+showBeer : Model.Beer -> String
+showBeer beer = beer.name ++ " : a" ++ quality beer.score ++ show beer.style ++ " from " ++ beer.brewery ++ " (" ++ show beer.abv ++ "% ABV)"
+
 menuScreen : Signal Element
-menuScreen = Menu.render beerInput .name <~ menuSignal ~ Window.dimensions
+menuScreen = Menu.render beerInput showBeer <~ menuSignal ~ Window.dimensions
 
 fpsBar : Signal Element
 fpsBar = (\w t -> color red <| spacer (clamp 0 w . round <| t / Constants.framerate * (toFloat w)) 2) <~ Window.width ~ feeps
