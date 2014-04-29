@@ -178,8 +178,8 @@ lines =
         (\_ -> flow right [Interface.orderButton, Interface.orderButton2])
         initialState
     , Rendertron.rendertron (\state -> (state.person.conscious, state.person.alive))
-        (\(conscious, alive) -> if | not alive -> plainText "you are dead. rip"
-                                   | not conscious -> plainText "you've passed out"
+        (\(conscious, alive) -> if | not alive -> centered . Text.height 30 . bold . toText <| "you are dead. rip"
+                                   | not conscious -> centered . Text.height 30 . bold . toText <| "you've passed out"
                                    | otherwise -> empty )
         initialState
     ]
