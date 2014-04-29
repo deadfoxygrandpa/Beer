@@ -4,7 +4,16 @@ data Sex = Male | Female
 data BeerStyle = PaleLager | PremiumBitter
 
 type State = {person : Person, drinks: Float, elapsed : Float, frames : Int, messages : [Message]}
-type Person = {sex : Sex, bac : Float, weight : Float, alc : Float, urine : Float, urinating : Bool, wetSelf : Bool, beers : (Float, Beer)}
+type Person = { sex : Sex
+              , bac : Float
+              , weight : Float
+              , alc : Float
+              , urine : Float
+              , urinating : Bool
+              , wetSelf : Bool
+              , beers : (Float, Beer)
+              , alcoholism : Float
+              }
 type Beer = {name : String, brewery : String, style : BeerStyle, abv : Float, score : Score}
 type Score = {overallScore : Float, styleScore : Float}
 

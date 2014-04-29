@@ -62,6 +62,11 @@ beer gen =
         (x, gen') = Generator.int32Range (0, n - 1) gen
     in (head . drop x <| BeerList.allBeers, gen')
 
+alcoholism : Generator.Generator g -> (Float, Generator.Generator g)
+alcoholism gen =
+    let (x, gen') = normal' (1, 0.5) gen
+    in  (clamp 0 100 x, gen')
+
 person : Generator.Generator Generator.Standard.Standard -> (Model.Person, Generator.Generator Generator.Standard.Standard)
 person gen =
     let (sex', gen1) = sex gen
@@ -72,4 +77,5 @@ person gen =
         urinating = False
         wetSelf = False
         (beer', gen5) = beer gen4
-    in (Model.Person sex' bac' weight' alc urine' urinating wetSelf (355, beer'), gen5)
+        (alcoholism', gen6) = alcoholism gen5
+    in (Model.Person sex' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism', gen6)
