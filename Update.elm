@@ -21,12 +21,13 @@ drank person bac =
 
 updateState : ((Model.State -> Model.State), Time) -> Model.State -> Model.State
 updateState (step, timeStep) state =
-    let state' = step state
+    let state' = if state.person.conscious then step state else state
         messages' = filter (\msg -> msg.timeout > 0) . map (\{msg, timeout} -> Model.Message msg (timeout - timeStep * 3600)) <| state'.messages
-    in  {state'| elapsed <- state.elapsed + timeStep
-               , person <- process timeStep state'.person
-               , frames <- state.frames + 1
-               , messages <- messages'}
+        state'' =  {state'| elapsed <- state.elapsed + timeStep
+                          , person <- process timeStep state'.person
+                          , frames <- state.frames + 1
+                          , messages <- messages'}
+    in  if state.person.alive then state'' else state
 
 emptyFrame : a -> Model.State -> Model.State
 emptyFrame _ state = state
@@ -84,11 +85,17 @@ process timeStep person =
             (urinating, wetSelf) = if | person.urine < 10  -> (False, False)
                                       | person.urine > 500 -> (True, True)
                                       | otherwise          -> (person.urinating, person.wetSelf)
-        in {person| bac <- clamp 0 100 <| person.bac + (newbac) - metabolized
+            bac' = clamp 0 100 <| person.bac + (newbac) - metabolized
+            conscious' = bac' < person.alcoholism * 0.3
+            alive' = bac' < person.alcoholism * 0.5
+        in {person| bac <- bac'
                   , alc <- person.alc - absorbed
                   , urine <- clamp 0 700 <| person.urine + urine - urinated
                   , urinating <- urinating
-                  , wetSelf <- wetSelf}
+                  , wetSelf <- wetSelf
+                  , conscious <- conscious'
+                  , alive <- alive'
+                  }
 
 updateGameState : (Model.GameState -> Model.GameState) -> Model.GameState -> Model.GameState
 updateGameState step state = step state

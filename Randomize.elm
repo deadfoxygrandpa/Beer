@@ -65,7 +65,7 @@ beer gen =
 alcoholism : Generator.Generator g -> (Float, Generator.Generator g)
 alcoholism gen =
     let (x, gen') = normal' (1, 0.5) gen
-    in  (clamp 0 100 x, gen')
+    in  (clamp 0.1 100 x, gen')
 
 person : Generator.Generator Generator.Standard.Standard -> (Model.Person, Generator.Generator Generator.Standard.Standard)
 person gen =
@@ -78,4 +78,4 @@ person gen =
         wetSelf = False
         (beer', gen5) = beer gen4
         (alcoholism', gen6) = alcoholism gen5
-    in (Model.Person sex' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism', gen6)
+    in (Model.Person sex' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism' True True, gen6)

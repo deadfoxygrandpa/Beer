@@ -13,6 +13,8 @@ type Person = { sex : Sex
               , wetSelf : Bool
               , beers : (Float, Beer)
               , alcoholism : Float
+              , conscious : Bool
+              , alive : Bool
               }
 type Beer = {name : String, brewery : String, style : BeerStyle, abv : Float, score : Score}
 type Score = {overallScore : Float, styleScore : Float}
