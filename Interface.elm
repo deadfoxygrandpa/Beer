@@ -81,7 +81,7 @@ render state (w, h) seed =
                                , flow right [sipButton, gulpButton, urinateButton]
                                , flow right [orderButton, orderButton2]
                                ]
-        distorted = SpecialEffects.theBest (Model.Environment (w, h) state (toFloat state.frames)) <| layers [messages, gameScreen]
+        distorted = layers [messages, gameScreen]
     in  layers [instructions, distorted, container w h bottomLeft (plainText <| "random seed: " ++ show seed)]
 
 gameScreen : Model.State -> (Int, Int) -> Element

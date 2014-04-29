@@ -17,7 +17,7 @@ type Person = { sex : Sex
 type Beer = {name : String, brewery : String, style : BeerStyle, abv : Float, score : Score}
 type Score = {overallScore : Float, styleScore : Float}
 
-type Environment = {windowSize : (Int, Int), state : State, time : Float}
+type Environment = {windowSize : (Int, Int), factor : Float, time : Float}
 
 type SpecialEffect = Environment -> Element -> Element
 

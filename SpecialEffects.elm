@@ -18,7 +18,7 @@ trans x y = Transform2D.multiply (shear x) (scale y)
 distort : SpecialEffect
 distort environment element =
     let (w, h) = environment.windowSize
-        factor = drunkFactor environment.state.person.bac
+        factor = drunkFactor environment.factor
         sx = factor
         sy = factor * 0.5
         x = environment.time
@@ -36,7 +36,7 @@ fuzzy environment element =
     let form = toForm element
         (w, h) = environment.windowSize
         t = environment.time
-        factor = clamp 0 100 <| environment.state.person.bac - 0.01
+        factor = clamp 0 100 <| environment.factor - 0.01
         x = 50 * factor * (sin <| t / 15)
         y = 20 * factor * (cos <| t / 10)
     in collage w h [ alpha 0.7 . move (-x, y) <| form, alpha 0.7 . move (x, y) <| form ]

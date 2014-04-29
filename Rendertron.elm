@@ -36,7 +36,5 @@ renderGame seed renderer state dimensions =
         elements = run renderer [spacer 0 0] state
         messages = (\elems (w, h) -> container w h (midTopAt (relative 0.5) (relative 0.7)) <| head elems) <~ elements ~ dimensions
         lines    = (\elems (w, h) -> container w h middle <| flow down (tail elems)) <~ elements ~ dimensions
-        distorted = (\(w, h) state messages gameScreen ->
-            SpecialEffects.theBest (Model.Environment (w, h) state (toFloat state.frames)) <|
-            layers [messages, gameScreen]) <~ dimensions ~ state ~ messages ~ lines
+        distorted = (\(w, h) state messages gameScreen -> layers [messages, gameScreen]) <~ dimensions ~ state ~ messages ~ lines
     in  layers <~ (Signal.combine [instructions, distorted, seed'])
