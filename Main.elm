@@ -27,7 +27,7 @@ port title : String
 port title = "Beer"
 
 frames : Signal Time
-frames = gameGroup.add (fps Constants.framerate) 0
+frames = gameGroup.add (fps 5) 0
 
 badBeer : Model.Beer
 badBeer = BeerList.tsingtao
