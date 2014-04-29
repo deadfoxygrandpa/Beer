@@ -46,9 +46,13 @@ moveDown _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| rig
 
 render : Input.Input a -> (a -> String) -> Menu a -> (Int, Int) -> Element
 render clicker toString {title, items} (w, h) =
-    let choice item = Input.button clicker.handle item . toString <| item
+    let choice item = button item
+        button item = Input.customButton clicker.handle item
+                            (container w 30 middle . plainText <| toString item)
+                            (container w 30 middle . centered . bold . toText <| toString item)
+                            (container w 30 middle . centered . bold . Text.color darkGrey . toText <| toString item)
         choices = container w h middle
-                    <| flow down . map (container w 40 middle) <| map (choice) (reverse <| getLeft items)
+                    <| flow down . map (container w 30 middle) <| map (choice) (reverse <| getLeft items)
                     ++ [color lightGrey . choice . select <| items]
                     ++ map choice (getRight items)
         heading = container w h midTop . centered . Text.height 40 . bold . toText <| title

@@ -70,6 +70,7 @@ initialGameState = Model.GameState False False
 
 gameStateUpdates : Signal (Model.GameState -> Model.GameState)
 gameStateUpdates = merges [ Update.togglePause <~ (Interface.keyPressed 'P')
+                          , delay 2 <| Update.closeMenu <~ beerInput.signal
                           , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 27)
                           , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 13)
                           , Update.openMenu    <~ Interface.orderClicks2
@@ -101,7 +102,8 @@ menuSignal : Signal (Menu.Menu Model.Beer)
 menuSignal = foldp Menu.update initialMenu menuUpdates'
 
 currentBeer : Signal Model.Beer
-currentBeer = Menu.select . .items <~ (sampleOn (menuGroup.add (Interface.keyCodePressed 13) ()) menuSignal)
+currentBeer = merge (Menu.select . .items <~ (sampleOn (menuGroup.add (Interface.keyCodePressed 13) ()) menuSignal))
+                    beerInput.signal
 
 beerInput : Input.Input Model.Beer
 beerInput = Input.input (snd initialState.person.beers)
@@ -113,8 +115,8 @@ fpsBar : Signal Element
 fpsBar = (\w t -> color red <| spacer (clamp 0 w . round <| t / Constants.framerate * (toFloat w)) 2) <~ Window.width ~ feeps
 
 main : Signal Element
-main = (\g m x b i -> if x then layers [m, b, asText i] else layers [g, b, asText i])
-    <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal) ~ fpsBar ~ beerInput.signal
+main = (\g m x b -> if x then layers [m, b] else layers [g, b])
+    <~ gameScreen2 ~ menuScreen ~ (.menuOpen <~ gameStateSignal) ~ fpsBar
 
 -- Rendertrons:
 
