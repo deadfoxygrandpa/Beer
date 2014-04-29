@@ -23,6 +23,8 @@ Elm.Main.make = function (_elm) {
    Graphics.Collage = Elm.Graphics.Collage.make(_elm);
    var Graphics = Graphics || {};
    Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Input = Elm.Graphics.Input.make(_elm);
    var Interface = Elm.Interface.make(_elm);
    var Keyboard = Elm.Keyboard.make(_elm);
    var List = Elm.List.make(_elm);
@@ -38,6 +40,7 @@ Elm.Main.make = function (_elm) {
    var Signal = Elm.Signal.make(_elm);
    var Signal = Signal || {};
    Signal.InputGroups = Elm.Signal.InputGroups.make(_elm);
+   var SpecialEffects = Elm.SpecialEffects.make(_elm);
    var String = Elm.String.make(_elm);
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
@@ -52,6 +55,13 @@ Elm.Main.make = function (_elm) {
       return 1000 / t;
    },
    Time.fps(Constants.framerate)));
+   var showAlcoholism = function (a) {
+      return _U.cmp(a,
+      0.25) < 0 ? " who never drinks" : _U.cmp(a,
+      1) < 0 ? " social drinker" : _U.cmp(a,
+      1.5) < 0 ? " heavy drinker" : _U.cmp(a,
+      2) < 0 ? " functioning alcoholic" : " alcoholic";
+   };
    var fpsBar = A2(Signal._op["~"],
    A2(Signal._op["<~"],
    F2(function (w,t) {
@@ -63,6 +73,24 @@ Elm.Main.make = function (_elm) {
    }),
    Window.width),
    feeps);
+   var quality = function (score) {
+      return _U.cmp(score.styleScore,
+      95) > 0 ? " perfect " : _U.cmp(score.styleScore,
+      85) > 0 ? "n excellent " : _U.cmp(score.styleScore,
+      75) > 0 ? " good " : _U.cmp(score.styleScore,
+      50) > 0 ? "n average " : " terrible ";
+   };
+   var showBeer = function (beer) {
+      return _L.append(beer.name,
+      _L.append(" : a",
+      _L.append(quality(beer.score),
+      _L.append(String.show(beer.style),
+      _L.append(" from ",
+      _L.append(beer.brewery,
+      _L.append(" (",
+      _L.append(String.show(beer.abv),
+      "% ABV)"))))))));
+   };
    var menuUpdates = Signal.merges(_L.fromArray([A2(Signal._op["<~"],
                                                 Menu.moveUp,
                                                 Interface.keyCodePressed(38))
@@ -70,9 +98,29 @@ Elm.Main.make = function (_elm) {
                                                 Menu.moveDown,
                                                 Interface.keyCodePressed(40))]));
    var initialMenu = Menu.menu;
+   var initialGameState = A2(Model.GameState,
+   false,
+   false);
+   var seed = Native.Ports.portIn("seed",
+   function (v) {
+      return typeof v === "number" ? v : _E.raise("invalid input, expecting JSNumber but got " + v);
+   });
+   var gen = Generator.Standard.generator(seed);
+   var initialState = A5(Model.State,
+   Basics.fst(Randomize.person(gen)),
+   0,
+   0,
+   0,
+   _L.fromArray([A2(Model.Message,
+   "Bartender: welcome",
+   5)]));
+   var beerInput = Graphics.Input.input(Basics.snd(initialState.person.beers));
    var gameStateUpdates = Signal.merges(_L.fromArray([A2(Signal._op["<~"],
                                                      Update.togglePause,
                                                      Interface.keyPressed(_U.chr("P")))
+                                                     ,Time.delay(2)(A2(Signal._op["<~"],
+                                                     Update.closeMenu,
+                                                     beerInput.signal))
                                                      ,Time.delay(2)(A2(Signal._op["<~"],
                                                      Update.closeMenu,
                                                      Interface.keyCodePressed(27)))
@@ -85,9 +133,6 @@ Elm.Main.make = function (_elm) {
                                                      ,A2(Signal._op["<~"],
                                                      Update.openMenu,
                                                      Interface.keyPressed(_U.chr("O")))]));
-   var initialGameState = A2(Model.GameState,
-   false,
-   false);
    var gameStateSignal = A3(Signal.foldp,
    Update.updateGameState,
    initialGameState,
@@ -110,14 +155,8 @@ Elm.Main.make = function (_elm) {
    Menu.update,
    initialMenu,
    menuUpdates$);
-   var menuScreen = A2(Signal._op["~"],
+   var currentBeer = A2(Signal.merge,
    A2(Signal._op["<~"],
-   Menu.render(function (_) {
-      return _.name;
-   }),
-   menuSignal),
-   Window.dimensions);
-   var currentBeer = A2(Signal._op["<~"],
    function ($) {
       return Menu.select(function (_) {
          return _.items;
@@ -127,20 +166,15 @@ Elm.Main.make = function (_elm) {
    A2(menuGroup.add,
    Interface.keyCodePressed(13),
    {ctor: "_Tuple0"}),
-   menuSignal));
-   var seed = Native.Ports.portIn("seed",
-   function (v) {
-      return typeof v === "number" ? v : _E.raise("invalid input, expecting JSNumber but got " + v);
-   });
-   var gen = Generator.Standard.generator(seed);
-   var initialState = A5(Model.State,
-   Basics.fst(Randomize.person(gen)),
-   0,
-   0,
-   0,
-   _L.fromArray([A2(Model.Message,
-   "Bartender: welcome",
-   5)]));
+   menuSignal)),
+   beerInput.signal);
+   var menuScreen = A2(Signal._op["~"],
+   A2(Signal._op["<~"],
+   A2(Menu.render,
+   beerInput,
+   showBeer),
+   menuSignal),
+   Window.dimensions);
    var lines = _L.fromArray([A3(Rendertron.rendertron,
                             function (state) {
                                return state.messages;
@@ -173,22 +207,24 @@ Elm.Main.make = function (_elm) {
                             initialState)
                             ,A3(Rendertron.rendertron,
                             function (state) {
-                               return {ctor: "_Tuple2"
+                               return {ctor: "_Tuple3"
                                       ,_0: state.person.weight
-                                      ,_1: state.person.sex};
+                                      ,_1: state.person.sex
+                                      ,_2: state.person.alcoholism};
                             },
                             function (_v2) {
                                return function () {
                                   switch (_v2.ctor)
-                                  {case "_Tuple2":
+                                  {case "_Tuple3":
                                      return A2(Graphics.Element.flow,
                                        Graphics.Element.right,
                                        _L.fromArray([Text.plainText("you are a ")
                                                     ,Text.plainText(String.left(5)(String.show(_v2._0)))
                                                     ,Text.plainText("kg ")
-                                                    ,Text.plainText(String.show(_v2._1))]));}
+                                                    ,Text.plainText(String.show(_v2._1))
+                                                    ,Text.plainText(showAlcoholism(_v2._2))]));}
                                   _E.Case($moduleName,
-                                  "on line 126, column 28 to 149");
+                                  "on line 151, column 40 to 203");
                                }();
                             },
                             initialState)
@@ -247,16 +283,16 @@ Elm.Main.make = function (_elm) {
                                       ,_1: state.person.wetSelf
                                       ,_2: state.person.urinating};
                             },
-                            function (_v6) {
+                            function (_v7) {
                                return function () {
-                                  switch (_v6.ctor)
+                                  switch (_v7.ctor)
                                   {case "_Tuple3":
                                      return Text.plainText(_L.append(A2(Interface.peeDisplay,
-                                       _v6._0,
-                                       _v6._1),
-                                       _v6._2 ? " (you are peeing)" : ""));}
+                                       _v7._0,
+                                       _v7._1),
+                                       _v7._2 ? " (you are peeing)" : ""));}
                                   _E.Case($moduleName,
-                                  "on line 141, column 42 to 139");
+                                  "on line 166, column 42 to 139");
                                }();
                             },
                             initialState)
@@ -287,7 +323,7 @@ Elm.Main.make = function (_elm) {
                             function (state) {
                                return {ctor: "_Tuple0"};
                             },
-                            function (_v11) {
+                            function (_v12) {
                                return function () {
                                   return A2(Graphics.Element.flow,
                                   Graphics.Element.right,
@@ -301,7 +337,7 @@ Elm.Main.make = function (_elm) {
                             function (state) {
                                return {ctor: "_Tuple0"};
                             },
-                            function (_v13) {
+                            function (_v14) {
                                return function () {
                                   return A2(Graphics.Element.flow,
                                   Graphics.Element.right,
@@ -309,21 +345,29 @@ Elm.Main.make = function (_elm) {
                                                ,Interface.orderButton2]));
                                }();
                             },
+                            initialState)
+                            ,A3(Rendertron.rendertron,
+                            function (state) {
+                               return {ctor: "_Tuple2"
+                                      ,_0: state.person.conscious
+                                      ,_1: state.person.alive};
+                            },
+                            function (_v16) {
+                               return function () {
+                                  switch (_v16.ctor)
+                                  {case "_Tuple2":
+                                     return Basics.not(_v16._1) ? Text.centered(Text.height(30)(Text.bold(Text.toText("you are dead. rip")))) : Basics.not(_v16._0) ? Text.centered(Text.height(30)(Text.bold(Text.toText("you\'ve passed out")))) : Graphics.Element.empty;}
+                                  _E.Case($moduleName,
+                                  "between lines 181 and 183");
+                               }();
+                            },
                             initialState)]);
    var badBeer = BeerList.tsingtao;
-   var initialPerson = A8(Model.Person,
-   Model.Male,
-   0,
-   80,
-   0,
-   0,
-   false,
-   false,
-   {ctor: "_Tuple2"
-   ,_0: 355
-   ,_1: badBeer});
+   var initialPerson = Model.Person(Model.Male)(0)(80)(0)(0)(false)(false)({ctor: "_Tuple2"
+                                                                           ,_0: 355
+                                                                           ,_1: badBeer})(1)(true)(true);
    var frames = A2(gameGroup.add,
-   Time.fps(Constants.framerate),
+   Time.fps(5),
    0);
    var time = Interface.timeFactor(frames);
    var updates = function () {
@@ -408,11 +452,24 @@ Elm.Main.make = function (_elm) {
    var main = A2(Signal._op["~"],
    A2(Signal._op["~"],
    A2(Signal._op["~"],
+   A2(Signal._op["~"],
+   A2(Signal._op["~"],
+   A2(Signal._op["~"],
    A2(Signal._op["<~"],
-   F4(function (g,m,x,b) {
-      return x ? Graphics.Element.layers(_L.fromArray([m
-                                                      ,b])) : Graphics.Element.layers(_L.fromArray([g
-                                                                                                   ,b]));
+   F7(function (g,
+   m,
+   x,
+   b,
+   dim,
+   person,
+   t) {
+      return function () {
+         var screen = x ? m : g;
+         return SpecialEffects.theBest(A2(Model.Environment,
+         dim,
+         person.bac / person.alcoholism)(Basics.toFloat(t)))(Graphics.Element.layers(_L.fromArray([screen
+                                                                                                  ,b])));
+      }();
    }),
    gameScreen2),
    menuScreen),
@@ -421,7 +478,14 @@ Elm.Main.make = function (_elm) {
       return _.menuOpen;
    },
    gameStateSignal)),
-   fpsBar);
+   fpsBar),
+   Window.dimensions),
+   A2(Signal._op["<~"],
+   function (_) {
+      return _.person;
+   },
+   stateSignal)),
+   Signal.count(feeps));
    var title = Native.Ports.portOut("title",
    function (v) {
       return v;
@@ -447,9 +511,13 @@ Elm.Main.make = function (_elm) {
                       ,menuUpdates: menuUpdates
                       ,menuSignal: menuSignal
                       ,currentBeer: currentBeer
+                      ,beerInput: beerInput
+                      ,quality: quality
+                      ,showBeer: showBeer
                       ,menuScreen: menuScreen
                       ,fpsBar: fpsBar
                       ,main: main
+                      ,showAlcoholism: showAlcoholism
                       ,lines: lines
                       ,gameScreen2: gameScreen2
                       ,feeps: feeps};
@@ -544,15 +612,10 @@ Elm.Rendertron.make = function (_elm) {
             return function () {
                switch (_v8.ctor)
                {case "_Tuple2":
-                  return SpecialEffects.theBest(A3(Model.Environment,
-                    {ctor: "_Tuple2"
-                    ,_0: _v8._0
-                    ,_1: _v8._1},
-                    state,
-                    Basics.toFloat(state.frames)))(Graphics.Element.layers(_L.fromArray([messages
-                                                                                        ,gameScreen])));}
+                  return Graphics.Element.layers(_L.fromArray([messages
+                                                              ,gameScreen]));}
                _E.Case($moduleName,
-               "between lines 40 and 41");
+               "on line 39, column 59 to 88");
             }();
          }),
          dimensions),
@@ -1097,6 +1160,18 @@ Elm.Randomize.make = function (_elm) {
                 ,_1: gen$};
       }();
    };
+   var alcoholism = function (gen) {
+      return function () {
+         var $ = A2(normal$,
+         {ctor: "_Tuple2",_0: 1,_1: 0.5},
+         gen),
+         x = $._0,
+         gen$ = $._1;
+         return {ctor: "_Tuple2"
+                ,_0: A3(Basics.clamp,0.1,100,x)
+                ,_1: gen$};
+      }();
+   };
    var bool = function (gen) {
       return function () {
          var int2Bool = function (n) {
@@ -1149,19 +1224,14 @@ Elm.Randomize.make = function (_elm) {
          var $ = beer(gen4),
          beer$ = $._0,
          gen5 = $._1;
+         var $ = alcoholism(gen5),
+         alcoholism$ = $._0,
+         gen6 = $._1;
          return {ctor: "_Tuple2"
-                ,_0: A8(Model.Person,
-                sex$,
-                bac$,
-                weight$,
-                alc,
-                urine$,
-                urinating,
-                wetSelf,
-                {ctor: "_Tuple2"
-                ,_0: 355
-                ,_1: beer$})
-                ,_1: gen5};
+                ,_0: Model.Person(sex$)(bac$)(weight$)(alc)(urine$)(urinating)(wetSelf)({ctor: "_Tuple2"
+                                                                                        ,_0: 355
+                                                                                        ,_1: beer$})(alcoholism$)(true)(true)
+                ,_1: gen6};
       }();
    };
    _elm.Randomize.values = {_op: _op
@@ -1173,6 +1243,7 @@ Elm.Randomize.make = function (_elm) {
                            ,weight: weight
                            ,urine: urine
                            ,beer: beer
+                           ,alcoholism: alcoholism
                            ,person: person};
    return _elm.Randomize.values;
 };Elm.Menu = Elm.Menu || {};
@@ -1193,6 +1264,8 @@ Elm.Menu.make = function (_elm) {
    Graphics.Collage = Elm.Graphics.Collage.make(_elm);
    var Graphics = Graphics || {};
    Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Input = Elm.Graphics.Input.make(_elm);
    var List = Elm.List.make(_elm);
    var Maybe = Elm.Maybe.make(_elm);
    var Model = Elm.Model.make(_elm);
@@ -1234,7 +1307,7 @@ Elm.Menu.make = function (_elm) {
               ,_0: _v0._1
               ,_1: _v0._2}));}
          _E.Case($moduleName,
-         "between lines 9 and 10");
+         "between lines 11 and 12");
       }();
    };
    var moveUp = F2(function (_v5,
@@ -1261,7 +1334,7 @@ Elm.Menu.make = function (_elm) {
               List.head(_v9._2),
               List.tail(_v9._2)));}
          _E.Case($moduleName,
-         "between lines 13 and 14");
+         "between lines 15 and 16");
       }();
    };
    var moveDown = F2(function (_v14,
@@ -1281,7 +1354,7 @@ Elm.Menu.make = function (_elm) {
          switch (_v18.ctor)
          {case "Zipper": return _v18._1;}
          _E.Case($moduleName,
-         "on line 17, column 25 to 26");
+         "on line 19, column 25 to 26");
       }();
    };
    var getLeft = function (_v23) {
@@ -1289,7 +1362,7 @@ Elm.Menu.make = function (_elm) {
          switch (_v23.ctor)
          {case "Zipper": return _v23._0;}
          _E.Case($moduleName,
-         "on line 20, column 26 to 27");
+         "on line 22, column 26 to 27");
       }();
    };
    var getRight = function (_v28) {
@@ -1297,10 +1370,11 @@ Elm.Menu.make = function (_elm) {
          switch (_v28.ctor)
          {case "Zipper": return _v28._2;}
          _E.Case($moduleName,
-         "on line 23, column 27 to 28");
+         "on line 25, column 27 to 28");
       }();
    };
-   var render = F3(function (toString,
+   var render = F4(function (clicker,
+   toString,
    _v33,
    _v34) {
       return function () {
@@ -1312,29 +1386,45 @@ Elm.Menu.make = function (_elm) {
                     _v34._0,
                     _v34._1,
                     Graphics.Element.midTop)(Text.centered(Text.height(40)(Text.bold(Text.toText(_v33.title)))));
+                    var button = function (item) {
+                       return A5(Graphics.Input.customButton,
+                       clicker.handle,
+                       item,
+                       A3(Graphics.Element.container,
+                       _v34._0,
+                       30,
+                       Graphics.Element.middle)(Text.plainText(toString(item))),
+                       A3(Graphics.Element.container,
+                       _v34._0,
+                       30,
+                       Graphics.Element.middle)(Text.centered(Text.bold(Text.toText(toString(item))))),
+                       A3(Graphics.Element.container,
+                       _v34._0,
+                       30,
+                       Graphics.Element.middle)(Text.centered(Text.bold(Text.color(Color.darkGrey)(Text.toText(toString(item)))))));
+                    };
+                    var choice = function (item) {
+                       return button(item);
+                    };
                     var choices = A3(Graphics.Element.container,
                     _v34._0,
                     _v34._1,
                     Graphics.Element.middle)(Graphics.Element.flow(Graphics.Element.down)(List.map(A3(Graphics.Element.container,
                     _v34._0,
-                    40,
+                    30,
                     Graphics.Element.middle))(_L.append(A2(List.map,
-                    function ($) {
-                       return Text.plainText(toString($));
-                    },
+                    choice,
                     List.reverse(getLeft(_v33.items))),
-                    _L.append(_L.fromArray([Graphics.Element.color(Color.lightGrey)(Text.plainText(toString(select(_v33.items))))]),
+                    _L.append(_L.fromArray([Graphics.Element.color(Color.lightGrey)(choice(select(_v33.items)))]),
                     A2(List.map,
-                    function ($) {
-                       return Text.plainText(toString($));
-                    },
+                    choice,
                     getRight(_v33.items)))))));
                     return Graphics.Element.layers(_L.fromArray([choices
                                                                 ,heading]));
                  }();
               }();}
          _E.Case($moduleName,
-         "between lines 47 and 52");
+         "between lines 49 and 59");
       }();
    });
    var fromList = function (_v39) {
@@ -1345,7 +1435,7 @@ Elm.Menu.make = function (_elm) {
               _v39._0,
               _v39._1);}
          _E.Case($moduleName,
-         "on line 26, column 20 to 34");
+         "on line 28, column 20 to 34");
       }();
    };
    var menu = Menu("Beer Menu")(fromList(BeerList.allBeers));
@@ -1357,7 +1447,7 @@ Elm.Menu.make = function (_elm) {
               _L.append(_L.fromArray([_v43._1]),
               _v43._2));}
          _E.Case($moduleName,
-         "on line 29, column 25 to 46");
+         "on line 31, column 25 to 46");
       }();
    };
    _elm.Menu.values = {_op: _op
@@ -1665,7 +1755,7 @@ Elm.Update.make = function (_elm) {
             {case "Female": return 1.7e-2;
                case "Male": return 1.5e-2;}
             _E.Case($moduleName,
-            "between lines 74 and 77");
+            "between lines 75 and 78");
          }();
          var m = mr * timeStep;
          var metabolized = _U.cmp(m,
@@ -1673,17 +1763,23 @@ Elm.Update.make = function (_elm) {
          var urine = 12 * A2(drank,
          person,
          metabolized);
-         return _U.replace([["bac"
-                            ,A2(Basics.clamp,
-                            0,
-                            100)(person.bac + newbac - metabolized)]
+         var bac$ = A2(Basics.clamp,
+         0,
+         100)(person.bac + newbac - metabolized);
+         var conscious$ = _U.cmp(bac$,
+         person.alcoholism * 0.3) < 0;
+         var alive$ = _U.cmp(bac$,
+         person.alcoholism * 0.5) < 0;
+         return _U.replace([["bac",bac$]
                            ,["alc",person.alc - absorbed]
                            ,["urine"
                             ,A2(Basics.clamp,
                             0,
                             700)(person.urine + urine - urinated)]
                            ,["urinating",urinating]
-                           ,["wetSelf",wetSelf]],
+                           ,["wetSelf",wetSelf]
+                           ,["conscious",conscious$]
+                           ,["alive",alive$]],
          person);
       }();
    });
@@ -1693,7 +1789,7 @@ Elm.Update.make = function (_elm) {
          switch (_v17.ctor)
          {case "_Tuple2":
             return function () {
-                 var state$ = _v17._0(state);
+                 var state$ = state.person.conscious ? _v17._0(state) : state;
                  var messages$ = List.filter(function (msg) {
                     return _U.cmp(msg.timeout,
                     0) > 0;
@@ -1704,18 +1800,19 @@ Elm.Update.make = function (_elm) {
                        _v21.timeout - _v17._1 * 3600);
                     }();
                  })(state$.messages));
-                 return _U.replace([["elapsed"
-                                    ,state.elapsed + _v17._1]
-                                   ,["person"
-                                    ,A2(process,
-                                    _v17._1,
-                                    state$.person)]
-                                   ,["frames",state.frames + 1]
-                                   ,["messages",messages$]],
+                 var state$$ = _U.replace([["elapsed"
+                                           ,state.elapsed + _v17._1]
+                                          ,["person"
+                                           ,A2(process,
+                                           _v17._1,
+                                           state$.person)]
+                                          ,["frames",state.frames + 1]
+                                          ,["messages",messages$]],
                  state$);
+                 return state.person.alive ? state$$ : state;
               }();}
          _E.Case($moduleName,
-         "between lines 24 and 29");
+         "between lines 24 and 30");
       }();
    });
    _elm.Update.values = {_op: _op
@@ -2069,13 +2166,8 @@ Elm.Interface.make = function (_elm) {
                  A2(List.take,
                  5,
                  state.messages))));
-                 var distorted = SpecialEffects.theBest(A3(Model.Environment,
-                 {ctor: "_Tuple2"
-                 ,_0: _v12._0
-                 ,_1: _v12._1},
-                 state,
-                 Basics.toFloat(state.frames)))(Graphics.Element.layers(_L.fromArray([messages
-                                                                                     ,gameScreen])));
+                 var distorted = Graphics.Element.layers(_L.fromArray([messages
+                                                                      ,gameScreen]));
                  return Graphics.Element.layers(_L.fromArray([instructions
                                                              ,distorted
                                                              ,A4(Graphics.Element.container,
@@ -2555,7 +2647,7 @@ Elm.SpecialEffects.make = function (_elm) {
       return function () {
          var factor = A2(Basics.clamp,
          0,
-         100)(environment.state.person.bac - 1.0e-2);
+         100)(environment.factor - 1.0e-2);
          var t = environment.time;
          var x = 50 * factor * Basics.sin(t / 15);
          var y = 20 * factor * Basics.cos(t / 10);
@@ -2615,7 +2707,7 @@ Elm.SpecialEffects.make = function (_elm) {
       return function () {
          var y = environment.time;
          var x = environment.time;
-         var factor = drunkFactor(environment.state.person.bac);
+         var factor = drunkFactor(environment.factor);
          var sx = factor;
          var sy = factor * 0.5;
          var $ = environment.windowSize,
@@ -2685,7 +2777,7 @@ Elm.Model.make = function (_elm) {
    b,
    c) {
       return {_: {}
-             ,state: b
+             ,factor: b
              ,time: c
              ,windowSize: a};
    });
@@ -2706,24 +2798,40 @@ Elm.Model.make = function (_elm) {
              ,score: e
              ,style: c};
    });
-   var Person = F8(function (a,
-   b,
-   c,
-   d,
-   e,
-   f,
-   g,
-   h) {
-      return {_: {}
-             ,alc: d
-             ,bac: b
-             ,beers: h
-             ,sex: a
-             ,urinating: f
-             ,urine: e
-             ,weight: c
-             ,wetSelf: g};
-   });
+   var Person = function (a) {
+      return function (b) {
+         return function (c) {
+            return function (d) {
+               return function (e) {
+                  return function (f) {
+                     return function (g) {
+                        return function (h) {
+                           return function (i) {
+                              return function (j) {
+                                 return function (k) {
+                                    return {_: {}
+                                           ,alc: d
+                                           ,alcoholism: i
+                                           ,alive: k
+                                           ,bac: b
+                                           ,beers: h
+                                           ,conscious: j
+                                           ,sex: a
+                                           ,urinating: f
+                                           ,urine: e
+                                           ,weight: c
+                                           ,wetSelf: g};
+                                 };
+                              };
+                           };
+                        };
+                     };
+                  };
+               };
+            };
+         };
+      };
+   };
    var State = F5(function (a,
    b,
    c,
