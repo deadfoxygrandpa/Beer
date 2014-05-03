@@ -39,6 +39,23 @@ sex gen =
         bool2Sex b = if b then Model.Female else Model.Male
     in (bool2Sex x, gen')
 
+gender : Generator.Generator g -> (Model.Gender, Generator.Generator g)
+gender gen =
+    let (x, gen') = Generator.int32Range (0, 100) gen
+        x' = if | x > 90    -> Model.Trans
+                | otherwise -> Model.Cis
+    in (x', gen')
+
+orientation : Generator.Generator g -> (Model.Orientation, Generator.Generator g)
+orientation gen =
+    let (x, gen') = Generator.int32Range (0, 100) gen
+        x' = if | x > 98    -> Model.Asexual
+                | x > 96    -> Model.Pansexual
+                | x > 90    -> Model.Bisexual
+                | x > 80    -> Model.Gay
+                | otherwise -> Model.Straight
+    in (x', gen')
+
 bac : Generator.Generator g -> (Float, Generator.Generator g)
 bac gen =
     let (x, gen') = normal' (0, 0.05) gen
@@ -78,4 +95,6 @@ person gen =
         wetSelf = False
         (beer', gen5) = beer gen4
         (alcoholism', gen6) = alcoholism gen5
-    in (Model.Person sex' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism' True True, gen6)
+        (gender', gen7) = gender gen6
+        (orientation', gen8) = orientation gen7
+    in (Model.Person sex' gender' orientation' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism' True True, gen8)
