@@ -22,7 +22,7 @@ drank person bac =
 updateState : ((Model.State -> Model.State), Time) -> Model.State -> Model.State
 updateState (step, timeStep) state =
     let state' = if state.person.conscious then step state else state
-        messages' = filter (\msg -> msg.timeout > 0) . map (\{msg, timeout} -> Model.Message msg (timeout - timeStep * 3600)) <| state'.messages
+        messages' = filter (\msg -> msg.timeout > 0) << map (\{msg, timeout} -> Model.Message msg (timeout - timeStep * 3600)) <| state'.messages
         state'' =  {state'| elapsed <- state.elapsed + timeStep
                           , person <- process timeStep state'.person
                           , frames <- state.frames + 1

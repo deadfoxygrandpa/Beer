@@ -2,6 +2,7 @@ module SpecialEffects (distort, plain, fuzzy, theBest) where
 
 -- Standard Library imports
 import Transform2D
+import Graphics.Collage (..)
 
 -- Project imports
 import Model (..)

@@ -1,6 +1,10 @@
 module Menu where
 
 import Graphics.Input as Input
+import List (length, head, tail, (::), reverse)
+import Maybe (withDefault, Maybe (..))
+import Graphics.Element (container, middle)
+import Text (plainText, centered, bold)
 
 import Model
 import BeerList
@@ -24,7 +28,7 @@ getLeft (Zipper a _ _) = a
 getRight : Zipper x -> List x
 getRight (Zipper _ _ b) = b
 
-fromList : [x] -> Zipper x
+fromList : List x -> Zipper x
 fromList (x::xs) = Zipper [] x xs
 
 toList : Zipper x -> List x
@@ -39,21 +43,21 @@ update : (Menu a -> Menu a) -> Menu a -> Menu a
 update step menu = step menu
 
 moveUp : a -> Menu b -> Menu b
-moveUp _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| left menu.items}
+moveUp _ ({title, items} as menu) = {menu| items <- withDefault menu.items identity <| left menu.items}
 
 moveDown : a -> Menu b -> Menu b
-moveDown _ ({title, items} as menu) = {menu| items <- maybe menu.items id <| right menu.items}
+moveDown _ ({title, items} as menu) = {menu| items <- withDefault menu.items identity <| right menu.items}
 
 render : Input.Input a -> (a -> String) -> Menu a -> (Int, Int) -> Element
 render clicker toString {title, items} (w, h) =
     let choice item = button item
         button item = Input.customButton clicker.handle item
-                            (container w 30 middle . plainText <| toString item)
-                            (container w 30 middle . centered . bold . toText <| toString item)
-                            (container w 30 middle . centered . bold . Text.color darkGrey . toText <| toString item)
+                            (container w 30 middle << plainText <| toString item)
+                            (container w 30 middle << centered << bold << toText <| toString item)
+                            (container w 30 middle << centered << bold << Text.color darkGrey << toText <| toString item)
         choices = container w h middle
-                    <| flow down . map (container w 30 middle) <| map (choice) (reverse <| getLeft items)
-                    ++ [color lightGrey . choice . select <| items]
+                    <| flow down << map (container w 30 middle) <| map (choice) (reverse <| getLeft items)
+                    ++ [color lightGrey << choice << select <| items]
                     ++ map choice (getRight items)
-        heading = container w h midTop . centered . Text.height 40 . bold . toText <| title
+        heading = container w h midTop << centered << Text.height 40 << bold << toText <| title
     in  layers [choices, heading]

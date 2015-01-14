@@ -1,5 +1,8 @@
 module Model where
 
+import Time (Time)
+import Graphics.Element (Element)
+
 type Sex = Male | Female
 type Gender = Cis | Trans
 type Orientation = Straight | Bisexual | Gay | Pansexual | Asexual
