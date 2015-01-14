@@ -4,9 +4,7 @@ module Randomize where
 import Model
 import BeerList
 
--- Catalog imports
-import Generator
-import Generator.Standard
+import Random
 
 -- Basic generator additions
 bool : Generator.Generator g -> (Bool, Generator.Generator g)

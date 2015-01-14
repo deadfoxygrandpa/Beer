@@ -5,6 +5,7 @@ import Window
 import Keyboard
 import Char
 import Graphics.Input as Input
+import Random
 
 -- Project imports
 import Interface
@@ -18,10 +19,17 @@ import Rendertron
 import SpecialEffects
 
 -- Catalog imports
-import Generator
-import Generator.Standard
-import Signal.InputGroups as InputGroups
 import Automaton
+
+-- From timthelion/elm-inputgroups:
+type alias InputGroup a =
+ {add: Signal a -> a -> Signal a}
+
+makeGroup: Signal Bool -> InputGroup a
+makeGroup toggle =
+ {add = (\signal a-> keepWhen toggle a signal)}
+
+-- Main program:
 
 port title : String
 port title = "Beer"
@@ -75,12 +83,12 @@ gameStateUpdates = merges [ Update.togglePause <~ (Interface.keyPressed 'P')
 gameStateSignal : Signal Model.GameState
 gameStateSignal = foldp Update.updateGameState initialGameState gameStateUpdates
 
-gameGroup = InputGroups.makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~ gameStateSignal)
+gameGroup = makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~ gameStateSignal)
 updates' = gameGroup.add updates (Update.emptyFrame 0, 0)
 
 initialMenu = Menu.menu
 
-menuGroup = InputGroups.makeGroup (.menuOpen <~ gameStateSignal)
+menuGroup = makeGroup (.menuOpen <~ gameStateSignal)
 menuUpdates' = menuGroup.add menuUpdates id
 
 menuUpdates : Signal (Menu.Menu Model.Beer -> Menu.Menu Model.Beer)
