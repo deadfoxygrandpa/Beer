@@ -12,7 +12,7 @@ import SpecialEffects
 import Model
 import Constants
 
-makeButtons : String -> (Int, Int) -> [String] -> ([Element], Signal String)
+makeButtons : String -> (Int, Int) -> List String -> (List Element, Signal String)
 makeButtons initial dimensions names =
     let inputs = map (\_ -> Input.input initial) names
         elems  = map (\(i, n) -> Input.customButton i.handle n (box n dimensions white) (box n dimensions lightGrey) (box n dimensions grey)) (zip inputs names)

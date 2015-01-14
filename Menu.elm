@@ -5,7 +5,7 @@ import Graphics.Input as Input
 import Model
 import BeerList
 
-data Zipper x = Zipper [x] x [x]
+data Zipper x = Zipper (List x) x (List x)
 
 left : Zipper x -> Maybe (Zipper x)
 left (Zipper a x b) = if (length a == 0) then Nothing
@@ -18,16 +18,16 @@ right (Zipper a x b) = if (length b == 0) then Nothing
 select : Zipper x -> x
 select (Zipper _ x _) = x
 
-getLeft : Zipper x -> [x]
+getLeft : Zipper x -> List x
 getLeft (Zipper a _ _) = a
 
-getRight : Zipper x -> [x]
+getRight : Zipper x -> List x
 getRight (Zipper _ _ b) = b
 
 fromList : [x] -> Zipper x
 fromList (x::xs) = Zipper [] x xs
 
-toList : Zipper x -> [x]
+toList : Zipper x -> List x
 toList (Zipper a x b) = reverse a ++ [x] ++ b
 
 type Menu a = {title : String, items : Zipper a}

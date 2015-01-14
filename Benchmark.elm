@@ -40,7 +40,7 @@ initialGameState = Model.GameState False False
 initialMenu : Menu.Menu Model.Beer
 initialMenu = Menu.menu
 
-lines : [Rendertron.Rendertron]
+lines : List Rendertron.Rendertron
 lines =
     [ Rendertron.rendertron (\state -> state.messages)
         (\messages -> flow down <| map (plainText . .msg) messages)
@@ -82,7 +82,7 @@ lines =
 
 renderer = Rendertron.renderer lines
 
-step5 : Automaton.Automaton i o -> [i] -> o
+step5 : Automaton.Automaton i o -> List i -> o
 step5 aut is =
     let (aut1, is1) = (fst <| Automaton.step (head is) aut, tail is)
         (aut2, is2) = (fst <| Automaton.step (head is1) aut1, tail is1)

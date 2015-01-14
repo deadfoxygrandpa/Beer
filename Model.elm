@@ -5,7 +5,7 @@ data Gender = Cis | Trans
 data Orientation = Straight | Bisexual | Gay | Pansexual | Asexual
 data BeerStyle = PaleLager | PremiumBitter
 
-type State = {person : Person, drinks: Float, elapsed : Float, frames : Int, messages : [Message]}
+type State = {person : Person, drinks: Float, elapsed : Float, frames : Int, messages : List Message}
 type Person = { sex : Sex
               , gender : Gender
               , orientation : Orientation

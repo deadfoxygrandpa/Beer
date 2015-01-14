@@ -24,13 +24,13 @@ rendertron getter renderer state =
                              in  ({s| input <- a, output <- o}, o)
     in  hiddenState state' step
 
-renderer : [Rendertron] -> Automaton Model.State [Element]
+renderer : List Rendertron -> Automaton Model.State (List Element)
 renderer rendertrons = Automaton.combine rendertrons
 
-renderLines : Automaton Model.State [Element] -> Signal Model.State -> Signal Element
+renderLines : Automaton Model.State (LIst Element) -> Signal Model.State -> Signal Element
 renderLines renderer state = flow down <~ run renderer [] state
 
-renderGame : Int -> Automaton Model.State [Element] -> Signal Model.State -> Signal (Int, Int) -> Signal Element
+renderGame : Int -> Automaton Model.State (List Element) -> Signal Model.State -> Signal (Int, Int) -> Signal Element
 renderGame seed renderer state dimensions =
     let instructions = constant Interface.instructions
         seed' = (\(w, h) -> container w h bottomLeft (plainText <| "random seed: " ++ show seed)) <~ dimensions
@@ -42,7 +42,7 @@ renderGame seed renderer state dimensions =
 
 -- Program specific:
 
-lines : Model.State -> [Rendertron]
+lines : Model.State -> (List Rendertron)
 lines initialState =
     [ rendertron (\state -> state.messages)
         (\messages -> flow down <| map (plainText . .msg) messages)
