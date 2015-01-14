@@ -10,8 +10,8 @@ import SpecialEffects
 import Automaton (..)
 import Automaton
 
-type Rendertron = Automaton Model.State Element
-type HiddenState a = {input : a, render : a -> Element, output : Element}
+type alias Rendertron = Automaton Model.State Element
+type alias HiddenState a = {input : a, render : a -> Element, output : Element}
 
 rendertron : (Model.State -> a) -> (a -> Element) -> Model.State -> Rendertron
 rendertron getter renderer state =

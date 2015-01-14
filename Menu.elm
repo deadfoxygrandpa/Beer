@@ -5,7 +5,7 @@ import Graphics.Input as Input
 import Model
 import BeerList
 
-data Zipper x = Zipper (List x) x (List x)
+type Zipper x = Zipper (List x) x (List x)
 
 left : Zipper x -> Maybe (Zipper x)
 left (Zipper a x b) = if (length a == 0) then Nothing
@@ -30,7 +30,7 @@ fromList (x::xs) = Zipper [] x xs
 toList : Zipper x -> List x
 toList (Zipper a x b) = reverse a ++ [x] ++ b
 
-type Menu a = {title : String, items : Zipper a}
+type alias Menu a = {title : String, items : Zipper a}
 
 menu : Menu Model.Beer
 menu = Menu "Beer Menu" <| fromList BeerList.allBeers
