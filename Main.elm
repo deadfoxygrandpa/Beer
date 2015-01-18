@@ -42,9 +42,7 @@ port title = "Beer"
 frames : Signal Time
 frames = gameGroup.add (fps 5) 0
 
---port seed : Int
-seed : Int
-seed = 101502600
+port seed : Int
 
 gen : Random.Seed
 gen = Random.initialSeed seed
