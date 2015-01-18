@@ -1,5 +1,8 @@
 module Update where
 
+import List (filter, map, (::))
+import Time (Time)
+
 -- Project imports
 import Model
 import Constants
