@@ -13,6 +13,7 @@ import Graphics.Element (Element, container, middle, color, flow, right, down, h
 import Text (plainText)
 import Time (Time, inHours, inMinutes, inSeconds)
 import Maybe (Maybe (..), withDefault)
+import Result
 
 -- Project imports
 import SpecialEffects
@@ -58,7 +59,7 @@ order2 = Signal.channel ()
 (orderButton2, orderClicks2)   = (Input.button (Signal.send order2  ()) "order from the menu" , Signal.subscribe order2)
 
 timeFactor : Signal Time -> Signal Time
-timeFactor time = Signal.map2 (\x t -> inHours (1000 * (withDefault 1 <| String.toFloat x) / (1000 / t))) timeAcceleration time
+timeFactor time = Signal.map2 (\x t -> inHours (1000 * (withDefault 1 << Result.toMaybe <| String.toFloat x) / (1000 / t))) timeAcceleration time
 
 instructions : Element
 instructions =
