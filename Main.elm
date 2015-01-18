@@ -6,6 +6,11 @@ import Keyboard
 import Char
 import Graphics.Input as Input
 import Random
+import Signal (Signal, keepWhen, (<~), (~), merge, mergeMany, sampleOn, foldp, Channel, channel, subscribe)
+import Time (Time, fps, delay)
+import Graphics.Element (Element, color, flow, down, right, spacer, layers)
+import List
+import Color (red)
 
 -- Project imports
 import Interface
@@ -37,32 +42,34 @@ port title = "Beer"
 frames : Signal Time
 frames = gameGroup.add (fps 5) 0
 
-port seed : Int
+--port seed : Int
+seed : Int
+seed = 101502600
 
-gen : Generator.Generator Generator.Standard.Standard
-gen = Generator.Standard.generator seed
+gen : Random.Seed
+gen = Random.initialSeed seed
 
 initialState : Model.State
-initialState = Model.State (fst <| Randomize.person gen) 0 0 0 [Model.Message "Bartender: welcome" 5]
+initialState = Model.State (fst <| Random.generate Randomize.person gen) 0 0 0 [Model.Message "Bartender: welcome" 5]
 
 time : Signal Time
 time = Interface.timeFactor frames
 
 updates : Signal ((Model.State -> Model.State), Time)
 updates =
-    let step = merges [ Update.sip <~ (keepWhen Keyboard.space 0 time)
-                      , Update.sip <~ (sampleOn Interface.sipClicks time)
-                      , Update.chug <~ (sampleOn Interface.chugClicks time)
-                      , Update.chug <~ (sampleOn (Interface.keyPressed 'C') time)
-                      , Update.gulp <~ (keepWhen (Keyboard.isDown <| Char.toCode 'G') 0 time)
-                      , Update.gulp <~ (sampleOn Interface.gulpClicks time)
-                      , Update.urinate <~ (sampleOn Interface.urinateClicks time)
-                      , Update.urinate <~ (sampleOn (Interface.keyPressed 'U') time)
-                      , Update.orderAnother <~ Interface.orderClicks
-                      , Update.orderAnother <~ (Interface.keyPressed 'A')
-                      , Update.order <~ (delay 2 currentBeer)
-                      , Update.emptyFrame <~ time
-                      ]
+    let step = mergeMany [ Update.sip <~ (keepWhen Keyboard.space 0 time)
+                         , Update.sip <~ (sampleOn Interface.sipClicks time)
+                         , Update.chug <~ (sampleOn Interface.chugClicks time)
+                         , Update.chug <~ (sampleOn (Interface.keyPressed 'C') time)
+                         , Update.gulp <~ (keepWhen (Keyboard.isDown <| Char.toCode 'G') 0 time)
+                         , Update.gulp <~ (sampleOn Interface.gulpClicks time)
+                         , Update.urinate <~ (sampleOn Interface.urinateClicks time)
+                         , Update.urinate <~ (sampleOn (Interface.keyPressed 'U') time)
+                         , Update.orderAnother <~ Interface.orderClicks
+                         , Update.orderAnother <~ (Interface.keyPressed 'A')
+                         , Update.order <~ (delay 2 currentBeer)
+                         , Update.emptyFrame <~ time
+                         ]
     in  (,) <~ step ~ time
 
 stateSignal : Signal Model.State
@@ -72,39 +79,39 @@ initialGameState : Model.GameState
 initialGameState = Model.GameState False False
 
 gameStateUpdates : Signal (Model.GameState -> Model.GameState)
-gameStateUpdates = merges [ Update.togglePause <~ (Interface.keyPressed 'P')
-                          , delay 2 <| Update.closeMenu <~ beerInput.signal
-                          , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 27)
-                          , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 13)
-                          , Update.openMenu    <~ Interface.orderClicks2
-                          , Update.openMenu    <~ (Interface.keyPressed 'O')
-                          ]
+gameStateUpdates = mergeMany [ Update.togglePause <~ (Interface.keyPressed 'P')
+                             , delay 2 <| Update.closeMenu <~ (subscribe beerInput)
+                             , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 27)
+                             , delay 2 <| Update.closeMenu   <~ (Interface.keyCodePressed 13)
+                             , Update.openMenu    <~ Interface.orderClicks2
+                             , Update.openMenu    <~ (Interface.keyPressed 'O')
+                             ]
 
 gameStateSignal : Signal Model.GameState
 gameStateSignal = foldp Update.updateGameState initialGameState gameStateUpdates
 
-gameGroup = makeGroup ((\g -> not . or <| [g.paused, g.menuOpen]) <~ gameStateSignal)
+gameGroup = makeGroup ((\g -> not << (\(a, b) -> a || b) <| (g.paused, g.menuOpen)) <~ gameStateSignal)
 updates' = gameGroup.add updates (Update.emptyFrame 0, 0)
 
 initialMenu = Menu.menu
 
 menuGroup = makeGroup (.menuOpen <~ gameStateSignal)
-menuUpdates' = menuGroup.add menuUpdates id
+menuUpdates' = menuGroup.add menuUpdates identity
 
 menuUpdates : Signal (Menu.Menu Model.Beer -> Menu.Menu Model.Beer)
-menuUpdates = merges [ Menu.moveUp <~ Interface.keyCodePressed 38
-                     , Menu.moveDown <~ Interface.keyCodePressed 40
-                     ]
+menuUpdates = mergeMany [ Menu.moveUp <~ Interface.keyCodePressed 38
+                        , Menu.moveDown <~ Interface.keyCodePressed 40
+                        ]
 
 menuSignal : Signal (Menu.Menu Model.Beer)
 menuSignal = foldp Menu.update initialMenu menuUpdates'
 
 currentBeer : Signal Model.Beer
-currentBeer = merge (Menu.select . .items <~ (sampleOn (menuGroup.add (Interface.keyCodePressed 13) ()) menuSignal))
-                    beerInput.signal
+currentBeer = merge (Menu.select << .items <~ (sampleOn (menuGroup.add (Interface.keyCodePressed 13) ()) menuSignal))
+                    (subscribe beerInput)
 
-beerInput : Input.Input Model.Beer
-beerInput = Input.input (snd initialState.person.beers)
+beerInput : Channel Model.Beer
+beerInput = channel (snd initialState.person.beers)
 
 quality : Model.Score -> String
 quality score = if | score.styleScore > 95 -> " perfect "
@@ -114,13 +121,13 @@ quality score = if | score.styleScore > 95 -> " perfect "
                    | otherwise             -> " terrible "
 
 showBeer : Model.Beer -> String
-showBeer beer = beer.name ++ " : a" ++ quality beer.score ++ show beer.style ++ " from " ++ beer.brewery ++ " (" ++ show beer.abv ++ "% ABV)"
+showBeer beer = beer.name ++ " : a" ++ quality beer.score ++ toString beer.style ++ " from " ++ beer.brewery ++ " (" ++ toString beer.abv ++ "% ABV)"
 
 menuScreen : Signal Element
 menuScreen = Menu.render beerInput showBeer <~ menuSignal ~ Window.dimensions
 
 fpsBar : Signal Element
-fpsBar = (\w t -> color red <| spacer (clamp 0 w . round <| t / Constants.framerate * (toFloat w)) 2) <~ Window.width ~ feeps
+fpsBar = (\w t -> color red <| spacer (clamp 0 w << round <| t / Constants.framerate * (toFloat w)) 2) <~ Window.width ~ feeps
 
 main : Signal Element
 main = (\g m x b dim person t -> let screen = if x then m else g
@@ -131,3 +138,5 @@ gameScreen : Signal Element
 gameScreen = Rendertron.renderGame seed (Rendertron.renderer <| Rendertron.lines initialState) stateSignal Window.dimensions
 
 feeps = Automaton.run (Automaton.average 30) 0 ((\t -> 1000 / t) <~ (fps Constants.framerate))
+
+count a = Automaton.run Automaton.count 0 a
