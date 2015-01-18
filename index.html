@@ -2881,7 +2881,11 @@ Elm.Main.make = function (_elm) {
    var initialGameState = A2($Model.GameState,
    false,
    false);
-   var seed = 101502600;
+   var seed = _P.portIn("seed",
+   function (v) {
+      return typeof v === "number" ? v : _U.badPort("a number",
+      v);
+   });
    var gen = $Random.initialSeed(seed);
    var initialState = A5($Model.State,
    $Basics.fst(A2($Random.generate,
@@ -2938,7 +2942,7 @@ Elm.Main.make = function (_elm) {
             {case "_Tuple2":
                return _v0._0 || _v0._1;}
             _U.badCase($moduleName,
-            "on line 93, column 50 to 56");
+            "on line 91, column 50 to 56");
          }();
       }({ctor: "_Tuple2"
         ,_0: g.paused
@@ -3104,7 +3108,6 @@ Elm.Main.make = function (_elm) {
                       ,InputGroup: InputGroup
                       ,makeGroup: makeGroup
                       ,frames: frames
-                      ,seed: seed
                       ,gen: gen
                       ,initialState: initialState
                       ,time: time
@@ -4618,7 +4621,7 @@ Elm.Native.Graphics.Element.make = function(localRuntime) {
             }
         }
 
-        // stop capturing clicks if 
+        // stop capturing clicks if
         if (removed
             && nextProps.hover.ctor === '_Tuple0'
             && nextProps.click.ctor === '_Tuple0')
@@ -4797,7 +4800,7 @@ Elm.Native.Graphics.Input.make = function(localRuntime) {
         btn.elm_up.style.display = 'block';
         btn.elm_hover.style.display = 'none';
         btn.elm_down.style.display = 'none';
-  
+
         btn.appendChild(btn.elm_up);
         btn.appendChild(btn.elm_hover);
         btn.appendChild(btn.elm_down);
@@ -5127,14 +5130,14 @@ Elm.Native.Keyboard.make = function(elm) {
         // Ignore starting values here
         this.value = emptyState;
         this.kids = [];
-        
+
         var n = args.length;
         var count = 0;
         var isChanged = false;
 
         this.recv = function(timestep, changed, parentID) {
             ++count;
-            if (changed) { 
+            if (changed) {
                 // We know this a change must only be one of the following cases
                 if (parentID === down.id && !A2(NList.member, down.value.keyCode, this.value.keyCodes)) {
                     isChanged = true;
@@ -6872,7 +6875,7 @@ Elm.Native.Text.make = function(elm) {
     function makeSpaces(s) {
         if (s.length == 0) { return s; }
         var arr = s.split('');
-        if (arr[0] == ' ') { arr[0] = "&nbsp;" }      
+        if (arr[0] == ' ') { arr[0] = "&nbsp;" }
         for (var i = arr.length; --i; ) {
             if (arr[i][0] == ' ' && arr[i-1] == ' ') {
                 arr[i-1] = arr[i-1] + arr[i];
@@ -7445,7 +7448,7 @@ Elm.Native.Utils.make = function(localRuntime) {
         return '\n' + lines.join('\n');
     }
 
-    function badCase(moduleName, span) { 
+    function badCase(moduleName, span) {
         var msg = indent([
             'Non-exhaustive pattern match in case-expression.',
             'Make sure your patterns cover every case!'
@@ -7453,7 +7456,7 @@ Elm.Native.Utils.make = function(localRuntime) {
         throw new Error('Runtime error in module ' + moduleName + ' (' + span + ')' + msg);
     }
 
-    function badIf(moduleName, span) { 
+    function badIf(moduleName, span) {
         var msg = indent([
             'Non-exhaustive pattern match in multi-way-if expression.',
             'It is best to use \'otherwise\' as the last branch of multi-way-if.'
@@ -7462,7 +7465,7 @@ Elm.Native.Utils.make = function(localRuntime) {
     }
 
 
-    function badPort(expected, received) { 
+    function badPort(expected, received) {
         var msg = indent([
             'Expecting ' + expected + ' but was given ',
             JSON.stringify(received)
@@ -10052,4 +10055,4 @@ Elm.Window.make = function (_elm) {
                         ,width: width
                         ,height: height};
    return _elm.Window.values;
-};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script></body></html>
+};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main, { seed: Math.floor(Math.random() * Math.pow(2, 32))})</script></body></html>
