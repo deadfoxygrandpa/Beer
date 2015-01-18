@@ -3,6 +3,7 @@ module SpecialEffects (distort, plain, fuzzy, theBest) where
 -- Standard Library imports
 import Transform2D
 import Graphics.Collage (..)
+import Graphics.Element (container, middle)
 
 -- Project imports
 import Model (..)
@@ -40,10 +41,10 @@ fuzzy environment element =
         factor = clamp 0 100 <| environment.factor - 0.01
         x = 50 * factor * (sin <| t / 15)
         y = 20 * factor * (cos <| t / 10)
-    in collage w h [ alpha 0.7 . move (-x, y) <| form, alpha 0.7 . move (x, y) <| form ]
+    in collage w h [ alpha 0.7 << move (-x, y) <| form, alpha 0.7 << move (x, y) <| form ]
 
 theBest : SpecialEffect
-theBest environment = distort environment . fuzzy environment
+theBest environment = distort environment << fuzzy environment
 
 drunkFactor : Float -> Float
 drunkFactor bac = bac^2
