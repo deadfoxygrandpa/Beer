@@ -1,10 +1,12 @@
 module Menu where
 
 import Graphics.Input as Input
-import List (length, head, tail, (::), reverse)
+import List (length, head, tail, (::), reverse, map)
 import Maybe (withDefault, Maybe (..))
-import Graphics.Element (container, middle)
-import Text (plainText, centered, bold)
+import Graphics.Element (container, middle, flow, down, midTop, layers, Element, color)
+import Text
+import Color (darkGrey, lightGrey)
+import Signal
 
 import Model
 import BeerList
@@ -43,21 +45,21 @@ update : (Menu a -> Menu a) -> Menu a -> Menu a
 update step menu = step menu
 
 moveUp : a -> Menu b -> Menu b
-moveUp _ ({title, items} as menu) = {menu| items <- withDefault menu.items identity <| left menu.items}
+moveUp _ ({title, items} as menu) = {menu| items <- withDefault menu.items <| left menu.items}
 
 moveDown : a -> Menu b -> Menu b
-moveDown _ ({title, items} as menu) = {menu| items <- withDefault menu.items identity <| right menu.items}
+moveDown _ ({title, items} as menu) = {menu| items <- withDefault menu.items <| right menu.items}
 
-render : Input.Input a -> (a -> String) -> Menu a -> (Int, Int) -> Element
+render : Signal.Channel a -> (a -> String) -> Menu a -> (Int, Int) -> Element
 render clicker toString {title, items} (w, h) =
     let choice item = button item
-        button item = Input.customButton clicker.handle item
-                            (container w 30 middle << plainText <| toString item)
-                            (container w 30 middle << centered << bold << toText <| toString item)
-                            (container w 30 middle << centered << bold << Text.color darkGrey << toText <| toString item)
+        button item = Input.customButton (Signal.send clicker item)
+                            (container w 30 middle << Text.plainText <| toString item)
+                            (container w 30 middle << Text.centered << Text.bold << Text.fromString <| toString item)
+                            (container w 30 middle << Text.centered << Text.bold << Text.color darkGrey << Text.fromString <| toString item)
         choices = container w h middle
                     <| flow down << map (container w 30 middle) <| map (choice) (reverse <| getLeft items)
                     ++ [color lightGrey << choice << select <| items]
                     ++ map choice (getRight items)
-        heading = container w h midTop << centered << Text.height 40 << bold << toText <| title
+        heading = container w h midTop << Text.centered << Text.height 40 << Text.bold << Text.fromString <| title
     in  layers [choices, heading]
