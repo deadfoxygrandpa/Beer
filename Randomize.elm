@@ -4,95 +4,107 @@ module Randomize where
 import Model
 import BeerList
 
+import List
 import Random
 
 -- Basic generator additions
-bool : Generator.Generator g -> (Bool, Generator.Generator g)
-bool gen =
-    let (x, gen') = Generator.int32Range (0, 1) gen
+bool : Random.Generator Bool
+bool =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate (Random.int 0 1) seed
         int2Bool n = case n of
                         0         -> False
                         otherwise -> True
-    in (int2Bool x, gen')
+    in (int2Bool x, seed')
 
-normal : Generator.Generator g -> (Float, Generator.Generator g)
-normal gen =
-    let makeXY gen = let (x, gen')  = Generator.floatRange (-1, 1) gen
-                         (y, gen'') = Generator.floatRange (-1, 1) gen'
-                         s = x^2 + y^2
-                      in if (s < 1) then (x, y, s, gen'') else makeXY gen''
-        (x, y, s, gen') = makeXY gen
+normal : Random.Generator Float
+normal =
+    Random.customGenerator <| \seed ->
+    let makeXY seed = let (x, seed')  = Random.generate (Random.float -1 1) seed
+                          (y, seed'') = Random.generate (Random.float -1 1) seed'
+                          s = x^2 + y^2
+                       in if (s < 1) then (x, y, s, seed'') else makeXY seed''
+        (x, y, s, seed') = makeXY seed
         n = x * (sqrt <| (-2 * (logBase e s)) / s)
-    in (n, gen')
+    in (n, seed')
 
-normal' : (Float, Float) -> Generator.Generator g -> (Float, Generator.Generator g)
-normal' (mean, sigma) gen =
-    let (x, gen') = normal gen
-    in (x * sigma + mean, gen')
+normal' : (Float, Float) -> Random.Generator Float
+normal' (mean, sigma) =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate normal seed
+    in (x * sigma + mean, seed')
 
 -- Randomized Person fields
-sex : Generator.Generator g -> (Model.Sex, Generator.Generator g)
-sex gen =
-    let (x, gen') = bool gen
+sex : Random.Generator Model.Sex
+sex =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate bool seed
         bool2Sex b = if b then Model.Female else Model.Male
-    in (bool2Sex x, gen')
+    in (bool2Sex x, seed')
 
-gender : Generator.Generator g -> (Model.Gender, Generator.Generator g)
-gender gen =
-    let (x, gen') = Generator.int32Range (0, 100) gen
+gender : Random.Generator Model.Gender
+gender =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate (Random.int 0 100) seed
         x' = if | x > 90    -> Model.Trans
                 | otherwise -> Model.Cis
-    in (x', gen')
+    in (x', seed')
 
-orientation : Generator.Generator g -> (Model.Orientation, Generator.Generator g)
-orientation gen =
-    let (x, gen') = Generator.int32Range (0, 100) gen
+orientation : Random.Generator Model.Orientation
+orientation =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate (Random.int 0 100) seed
         x' = if | x > 98    -> Model.Asexual
                 | x > 96    -> Model.Pansexual
                 | x > 90    -> Model.Bisexual
                 | x > 80    -> Model.Gay
                 | otherwise -> Model.Straight
-    in (x', gen')
+    in (x', seed')
 
-bac : Generator.Generator g -> (Float, Generator.Generator g)
-bac gen =
-    let (x, gen') = normal' (0, 0.05) gen
-    in (clamp 0 100 x, gen')
+bac : Random.Generator Float
+bac =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate (normal' (0, 0.05)) seed
+    in (clamp 0 100 x, seed')
 
-weight : Model.Sex -> Generator.Generator g -> (Float, Generator.Generator g)
+weight : Model.Sex -> Random.Generator Float
 weight sex =
     let (mean, sigma) = case sex of
                             Model.Male   -> (75.7, 12.2)
                             Model.Female -> (64.9, 12.7)
     in normal' (mean, sigma)
 
-urine : Generator.Generator g -> (Float, Generator.Generator g)
-urine gen =
-    let (x, gen') = normal' (50, 35) gen
-    in (clamp 0 1000 x, gen')
+urine : Random.Generator Float
+urine =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate (normal' (50, 35)) seed
+    in (clamp 0 1000 x, seed')
 
-beer : Generator.Generator g -> (Model.Beer, Generator.Generator g)
-beer gen =
-    let n = length BeerList.allBeers
-        (x, gen') = Generator.int32Range (0, n - 1) gen
-    in (head . drop x <| BeerList.allBeers, gen')
+beer : Random.Generator Model.Beer
+beer =
+    Random.customGenerator <| \seed ->
+    let n = List.length BeerList.allBeers
+        (x, seed') = Random.generate (Random.int 0 <| n - 1) seed
+    in (List.head << List.drop x <| BeerList.allBeers, seed')
 
-alcoholism : Generator.Generator g -> (Float, Generator.Generator g)
-alcoholism gen =
-    let (x, gen') = normal' (1, 0.5) gen
-    in  (clamp 0.1 100 x, gen')
+alcoholism : Random.Generator Float
+alcoholism =
+    Random.customGenerator <| \seed ->
+    let (x, seed') = Random.generate (normal' (1, 0.5)) seed
+    in  (clamp 0.1 100 x, seed')
 
-person : Generator.Generator Generator.Standard.Standard -> (Model.Person, Generator.Generator Generator.Standard.Standard)
-person gen =
-    let (sex', gen1) = sex gen
-        (bac', gen2) = bac gen1
-        (weight', gen3) = weight sex' gen2
+person : Random.Generator Model.Person
+person =
+    Random.customGenerator <| \seed ->
+    let (sex', seed1) = Random.generate sex seed
+        (bac', seed2) = Random.generate bac seed1
+        (weight', seed3) = Random.generate (weight sex') seed2
         alc = 0
-        (urine', gen4) = urine gen3
+        (urine', seed4) = Random.generate urine seed3
         urinating = False
         wetSelf = False
-        (beer', gen5) = beer gen4
-        (alcoholism', gen6) = alcoholism gen5
-        (gender', gen7) = gender gen6
-        (orientation', gen8) = orientation gen7
-    in (Model.Person sex' gender' orientation' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism' True True, gen8)
+        (beer', seed5) = Random.generate beer seed4
+        (alcoholism', seed6) = Random.generate alcoholism seed5
+        (gender', seed7) = Random.generate gender seed6
+        (orientation', seed8) = Random.generate orientation seed7
+    in (Model.Person sex' gender' orientation' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism' True True, seed8)
