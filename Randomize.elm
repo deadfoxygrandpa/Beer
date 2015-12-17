@@ -4,8 +4,9 @@ module Randomize where
 import Model
 import BeerList
 
-import List
 import Random exposing (andThen)
+import Random.Extra
+import Random.Float
 
 -- Basic generator additions
 bool : Random.Generator Bool
@@ -14,22 +15,7 @@ bool =
 
 normal : Random.Generator Float
 normal =
-    Random.map
-        (\(x, y) ->
-            let
-                s = x^2 + y^2
-            in
-                x * (sqrt <| (-2 * (logBase e s)) / s))
-        (Random.pair (Random.float -1 1) (Random.float -1 1))
-
-    --Random.customGenerator <| \seed ->
-    --let makeXY seed = let (x, seed')  = Random.generate (Random.float -1 1) seed
-    --                      (y, seed'') = Random.generate (Random.float -1 1) seed'
-    --                      s = x^2 + y^2
-    --                   in if (s < 1) then (x, y, s, seed'') else makeXY seed''
-    --    (x, y, s, seed') = makeXY seed
-    --    n = x * (sqrt <| (-2 * (logBase e s)) / s)
-    --in (n, seed')
+    Random.Float.standardNormal
 
 normal' : (Float, Float) -> Random.Generator Float
 normal' (mean, sigma) =
@@ -77,15 +63,7 @@ urine =
 
 beer : Random.Generator Model.Beer
 beer =
-    let
-        n = List.length BeerList.allBeers
-    in
-        Random.map
-            (\x ->
-                case List.head (List.drop x BeerList.allBeers) of
-                    Just beer -> beer
-                    Nothing -> Debug.crash "welp,")
-            (Random.int 0 <| n - 1)
+    Random.Extra.selectWithDefault (Debug.crash "welp,") BeerList.allBeers
 
 alcoholism : Random.Generator Float
 alcoholism =
@@ -101,18 +79,4 @@ person =
     alcoholism `andThen` \alcoholism' ->
     gender `andThen` \gender' ->
     orientation `andThen` \orientation' ->
-    Random.map (\_ -> Model.Person sex' gender' orientation' bac' weight' 0 urine' False False (355, beer') alcoholism' True True) bool
-
-    --Random.customGenerator <| \seed ->
-    --let (sex', seed1) = Random.generate sex seed
-    --    (bac', seed2) = Random.generate bac seed1
-    --    (weight', seed3) = Random.generate (weight sex') seed2
-    --    alc = 0
-    --    (urine', seed4) = Random.generate urine seed3
-    --    urinating = False
-    --    wetSelf = False
-    --    (beer', seed5) = Random.generate beer seed4
-    --    (alcoholism', seed6) = Random.generate alcoholism seed5
-    --    (gender', seed7) = Random.generate gender seed6
-    --    (orientation', seed8) = Random.generate orientation seed7
-    --in (Model.Person sex' gender' orientation' bac' weight' alc urine' urinating wetSelf (355, beer') alcoholism' True True, seed8)
+    Random.Extra.constant (Model.Person sex' gender' orientation' bac' weight' 0 urine' False False (355, beer') alcoholism' True True)
