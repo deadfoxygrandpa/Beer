@@ -63,7 +63,7 @@ urine =
 
 beer : Random.Generator Model.Beer
 beer =
-    Random.Extra.selectWithDefault (Debug.crash "welp,") BeerList.allBeers
+    Random.Extra.selectWithDefault BeerList.tsingtao BeerList.allBeers
 
 alcoholism : Random.Generator Float
 alcoholism =
