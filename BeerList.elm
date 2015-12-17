@@ -1,6 +1,6 @@
 module BeerList where
 
-import Model (..)
+import Model exposing (..)
 
 tsingtao = Beer "Tsingtao" "Tsingtao Brewery" PaleLager 4.3 (Score 6 49)
 budweiser = Beer "Budweiser" "Anheuser-Busch InBev" PaleLager 5 (Score 0 3)
