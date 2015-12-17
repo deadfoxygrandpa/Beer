@@ -1,7 +1,7 @@
 module Update where
 
-import List (filter, map, (::))
-import Time (Time)
+import List exposing (filter, map, (::))
+import Time exposing (Time)
 
 -- Project imports
 import Model

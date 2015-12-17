@@ -1,8 +1,8 @@
 module Rendertron where
 
-import Signal (Signal, (<~), (~), map, constant)
+import Signal exposing (Signal, (<~), (~), map, constant)
 import String
-import Graphics.Element (Element, container, middle, midTopAt, flow, down, right, bottomLeft, spacer, relative, layers, width)
+import Graphics.Element exposing (Element, container, middle, midTopAt, flow, down, right, bottomLeft, spacer, relative, layers, width)
 import List
 import Text
 
@@ -10,8 +10,7 @@ import Model
 import Interface
 import SpecialEffects
 
-import Automaton (..)
-import Automaton
+import Automaton exposing (..)
 
 type alias Rendertron = Automaton Model.State Element
 type alias HiddenState a = {input : a, render : a -> Element, output : Element}

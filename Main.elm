@@ -6,11 +6,11 @@ import Keyboard
 import Char
 import Graphics.Input as Input
 import Random
-import Signal (Signal, keepWhen, (<~), (~), merge, mergeMany, sampleOn, foldp, Channel, channel, subscribe)
-import Time (Time, fps, delay)
-import Graphics.Element (Element, color, flow, down, right, spacer, layers)
+import Signal exposing (Signal, keepWhen, (<~), (~), merge, mergeMany, sampleOn, foldp, Channel, channel, subscribe)
+import Time exposing (Time, fps, delay)
+import Graphics.Element exposing (Element, color, flow, down, right, spacer, layers)
 import List
-import Color (red)
+import Color exposing (red)
 
 -- Project imports
 import Interface

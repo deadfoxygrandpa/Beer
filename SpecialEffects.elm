@@ -2,11 +2,11 @@ module SpecialEffects (distort, plain, fuzzy, theBest) where
 
 -- Standard Library imports
 import Transform2D
-import Graphics.Collage (..)
-import Graphics.Element (container, middle)
+import Graphics.Collage exposing (..)
+import Graphics.Element exposing (container, middle)
 
 -- Project imports
-import Model (..)
+import Model exposing (..)
 
 shear : Float -> Transform2D.Transform2D
 shear x = Transform2D.matrix 1 (0.2 * x) 0 1 1 1

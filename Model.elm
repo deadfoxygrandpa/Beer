@@ -1,7 +1,7 @@
 module Model where
 
-import Time (Time)
-import Graphics.Element (Element)
+import Time exposing (Time)
+import Graphics.Element exposing (Element)
 
 type Sex = Male | Female
 type Gender = Cis | Trans

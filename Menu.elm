@@ -1,11 +1,11 @@
 module Menu where
 
 import Graphics.Input as Input
-import List (length, head, tail, (::), reverse, map)
-import Maybe (withDefault, Maybe (..))
-import Graphics.Element (container, middle, flow, down, midTop, layers, Element, color)
+import List exposing (length, head, tail, (::), reverse, map)
+import Maybe exposing (withDefault, Maybe (..))
+import Graphics.Element exposing (container, middle, flow, down, midTop, layers, Element, color)
 import Text
-import Color (darkGrey, lightGrey)
+import Color exposing (darkGrey, lightGrey)
 import Signal
 
 import Model

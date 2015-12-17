@@ -7,12 +7,12 @@ import String
 import Window
 import Char
 import Keyboard
-import List (map, map2, take)
-import Color (Color, white, black, lightGrey, grey)
-import Graphics.Element (Element, container, middle, color, flow, right, down, heightOf, midTopAt, relative, width, layers, bottomLeft)
-import Text (plainText)
-import Time (Time, inHours, inMinutes, inSeconds)
-import Maybe (Maybe (..), withDefault)
+import List exposing (map, map2, take)
+import Color exposing (Color, white, black, lightGrey, grey)
+import Graphics.Element exposing (Element, container, middle, color, flow, right, down, heightOf, midTopAt, relative, width, layers, bottomLeft)
+import Text exposing (plainText)
+import Time exposing (Time, inHours, inMinutes, inSeconds)
+import Maybe exposing (Maybe (..), withDefault)
 import Result
 
 -- Project imports
