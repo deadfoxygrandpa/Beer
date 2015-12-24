@@ -1,6 +1,7 @@
 module Game (..) where
 
 import Html exposing (..)
+import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Time exposing (Time, inHours, inMinutes, inSeconds)
 import Random exposing (andThen, bool)
@@ -8,10 +9,18 @@ import Random.Extra
 import Random.Float
 import String
 import List
+import Constants
 
 
 type alias Model =
-    { person : Person, drinks : Float, elapsed : Float, frames : Int, messages : List Message }
+    { person : Person
+    , drinks : Float
+    , elapsed : Float
+    , frames : Int
+    , messages : List Message
+    , paused : Bool
+    , timeAcceleration : Float
+    }
 
 
 type alias Person =
@@ -77,22 +86,86 @@ init seed =
             0
             0
             [ Message "Bartender: welcome" 5 ]
+            False
+            1
 
 
 type Action
-    = Tick Float
+    = Pause
+    | Tick Float
+    | Chug
+    | Gulp
+    | Sip
 
 
 update : Action -> Model -> Model
 update action model =
-    case action of
-        Tick t ->
-            let
-                x = "1"
+    if model.paused then
+        case action of
+            Tick _ ->
+                model
 
-                elapsed = inHours (1000 * (Maybe.withDefault 1 << Result.toMaybe <| String.toFloat x) / (1000 / t))
+            _ ->
+                { model | paused = False }
+    else
+        case action of
+            Pause ->
+                { model | paused = True }
+
+            Tick t ->
+                let
+                    x = toString model.timeAcceleration
+
+                    elapsed = inHours (1000 * (Maybe.withDefault 1 << Result.toMaybe <| String.toFloat x) / (1000 / t))
+
+                    messages = List.map (\message -> { message | timeout = message.timeout - 3600 * elapsed }) model.messages
+                in
+                    { model
+                        | elapsed = model.elapsed + elapsed
+                        , messages = List.filter (\message -> message.timeout > 0) messages
+                    }
+
+            Chug ->
+                consume Constants.chugRate (timeFactor model.timeAcceleration) model
+
+            Gulp ->
+                consume Constants.gulpRate (timeFactor model.timeAcceleration) model
+
+            Sip ->
+                consume Constants.sipRate (timeFactor model.timeAcceleration) model
+
+
+
+--_ ->
+--    model
+
+
+fps =
+    10
+
+
+timeFactor timeAcceleration =
+    inHours (1000 * timeAcceleration / (1000 / fps))
+
+
+consume : Float -> Float -> Model -> Model
+consume rate timeStep model =
+    let
+        consume' rate t person =
+            let
+                ( remaining, beer ) = person.beers
+
+                volume = clamp 0 remaining <| rate * t
+
+                alcVolume = volume * ((snd person.beers).abv / 100)
+
+                grams = Constants.ethanolDensity * alcVolume
             in
-                { model | elapsed = model.elapsed + elapsed }
+                ( { person | alc = person.alc + grams, beers = ( remaining - volume, beer ) }, volume )
+
+        ( person, volume ) = consume' rate timeStep model.person
+    in
+        { model | person = person, drinks = model.drinks + (volume / 355) }
 
 
 view address model =
@@ -101,7 +174,7 @@ view address model =
     in
         div
             []
-            [ h3 [] <| List.map (.msg >> text) model.messages
+            [ h3 [ style [ ( "position", "absolute" ) ] ] <| List.map (.msg >> text) model.messages
             , line
                 <| "you are a "
                 ++ toString model.person.weight
@@ -135,6 +208,13 @@ view address model =
             , line
                 <| "u been at the bar for "
                 ++ timeDisplay model.elapsed
+            , div
+                []
+                [ button [ onClick address Chug ] [ text "slam back a brewski" ]
+                , button [ onClick address Gulp ] [ text "gulp some beer" ]
+                , button [ onClick address Sip ] [ text "sip some beer" ]
+                ]
+            , div [] [ button [ onClick address Pause ] [ text "pause" ] ]
             , line
                 <| if not model.person.alive then
                     "you are dead. rip"
