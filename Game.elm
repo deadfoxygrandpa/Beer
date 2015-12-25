@@ -96,6 +96,7 @@ type Action
     | Chug
     | Gulp
     | Sip
+    | TimeAccelerate Float
 
 
 update : Action -> Model -> Model
@@ -112,6 +113,18 @@ update action model =
             Pause ->
                 { model | paused = True }
 
+            Chug ->
+                consume Constants.chugRate (timeFactor model.timeAcceleration) model
+
+            Gulp ->
+                consume Constants.gulpRate (timeFactor model.timeAcceleration) model
+
+            Sip ->
+                consume Constants.sipRate (timeFactor model.timeAcceleration) model
+
+            TimeAccelerate t ->
+                { model | timeAcceleration = t }
+
             Tick t ->
                 let
                     x = toString model.timeAcceleration
@@ -124,20 +137,6 @@ update action model =
                         | elapsed = model.elapsed + elapsed
                         , messages = List.filter (\message -> message.timeout > 0) messages
                     }
-
-            Chug ->
-                consume Constants.chugRate (timeFactor model.timeAcceleration) model
-
-            Gulp ->
-                consume Constants.gulpRate (timeFactor model.timeAcceleration) model
-
-            Sip ->
-                consume Constants.sipRate (timeFactor model.timeAcceleration) model
-
-
-
---_ ->
---    model
 
 
 fps =
@@ -208,6 +207,14 @@ view address model =
             , line
                 <| "u been at the bar for "
                 ++ timeDisplay model.elapsed
+            , div
+                []
+                [ text "time acceleration: "
+                , button [ onClick address (TimeAccelerate 1) ] [ text "1" ]
+                , button [ onClick address (TimeAccelerate 2) ] [ text "2" ]
+                , button [ onClick address (TimeAccelerate 60) ] [ text "60" ]
+                , button [ onClick address (TimeAccelerate 600) ] [ text "600" ]
+                ]
             , div
                 []
                 [ button [ onClick address Chug ] [ text "slam back a brewski" ]
