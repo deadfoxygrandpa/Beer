@@ -132,11 +132,71 @@ update action model =
                     elapsed = inHours (1000 * (Maybe.withDefault 1 << Result.toMaybe <| String.toFloat x) / (1000 / t))
 
                     messages = List.map (\message -> { message | timeout = message.timeout - 3600 * elapsed }) model.messages
+
+                    person = model.person
+
+                    ( bac, alc, urine ) = processAlcohol elapsed person
+
+                    newPerson = { person | bac = bac, alc = alc, urine = urine }
                 in
                     { model
                         | elapsed = model.elapsed + elapsed
                         , messages = List.filter (\message -> message.timeout > 0) messages
+                        , person = newPerson
                     }
+
+
+processAlcohol : Float -> Person -> ( Float, Float, Float )
+processAlcohol timeStep person =
+    let
+        mr =
+            case person.sex of
+                Male ->
+                    1.5e-2
+
+                Female ->
+                    1.7e-2
+
+        bw =
+            case person.sex of
+                Male ->
+                    0.58
+
+                Female ->
+                    0.49
+
+        a = Constants.absorptionRate * timeStep
+
+        absorbed =
+            if (a > person.alc) then
+                person.alc
+            else
+                a
+
+        newbac = drink (absorbed * 1.19)
+
+        drink : Float -> Float
+        drink grams =
+            let
+                sd = grams / 10
+            in
+                clamp 0 100 <| ((0.806 * sd * 1.2) / (bw * person.weight))
+
+        m = mr * timeStep
+
+        metabolized =
+            if (m > person.bac) then
+                person.bac
+            else
+                m
+
+        bac = clamp 0 100 <| person.bac + (newbac) - metabolized
+
+        alc = person.alc - absorbed
+
+        urine = 12 * (10 * bac * bw * person.weight) / (1.2 * 0.806)
+    in
+        ( bac, alc, urine )
 
 
 fps =
