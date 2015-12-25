@@ -106,8 +106,8 @@ update action model =
             Tick _ ->
                 model
 
-            _ ->
-                { model | paused = False }
+            action ->
+                update action { model | paused = False }
     else
         case action of
             Pause ->
